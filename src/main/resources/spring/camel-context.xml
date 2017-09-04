@@ -2,403 +2,362 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
     xmlns:camel="http://camel.apache.org/schema/spring"
     xmlns:spring-security="http://www.springframework.org/schema/security"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        
-                        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
-                        http://camel.apache.org/schema/spring-security http://camel.apache.org/schema/spring-security/camel-spring-security.xsd
-                        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
-  <bean
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd                                 http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd                         http://camel.apache.org/schema/spring-security http://camel.apache.org/schema/spring-security/camel-spring-security.xsd                         http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+    <!-- env properties -->
+    <bean
         class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" id="propertyPlaceholderConfigurer">
         <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
         <property name="searchSystemEnvironment" value="true"/>
-  </bean>
-    
-  <bean class="com.mongodb.MongoClient" id="cloudDb">
+    </bean>
+    <!-- mongodb connection -->
+    <bean class="com.mongodb.MongoClient" id="cloudDb">
         <constructor-arg index="0">
             <bean class="com.mongodb.MongoClientURI">
                 <constructor-arg index="0" value="mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@${MONGODB_SERVICE_HOST}:${MONGODB_SERVICE_PORT}/${MONGODB_DATABASE}"/>
             </bean>
         </constructor-arg>
-  </bean>
-
-  <bean class="org.apache.camel.component.servlet.CamelHttpTransportServlet" id="camelHttpTransportServlet"/>
-  <bean
+    </bean>
+    <!-- rest servlet -->
+    <bean
+        class="org.apache.camel.component.servlet.CamelHttpTransportServlet" id="camelHttpTransportServlet"/>
+    <bean
         class="org.springframework.boot.web.servlet.ServletRegistrationBean" id="servlet">
         <property name="name" value="CamelServlet"/>
         <property name="servlet" ref="camelHttpTransportServlet"/>
         <property name="urlMappings" value="/camel/*"/>
-  </bean>
-    
-  <spring-security:http realm="User Restrict Realm">
-    <spring-security:intercept-url pattern="/camel/**"
-                                   access="hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')"/>
-    <spring-security:http-basic/>
-    <spring-security:remember-me/>
-  </spring-security:http>
- 
-  <spring-security:authentication-manager alias="authenticationManager">
-    <spring-security:authentication-provider user-service-ref="userDetailsService"/>
-  </spring-security:authentication-manager>
- 
-  <spring-security:user-service id="userDetailsService" properties="classpath:/users.properties"/>
- 
-  <bean id="accessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
-    <constructor-arg>
-      <bean class="org.springframework.security.access.vote.RoleVoter"/>
-    </constructor-arg>
-    <property name="allowIfAllAbstainDecisions" value="true"/>
-  </bean>
- 
-  <authorizationPolicy id="admin" access="ROLE_ADMIN"
-                       authenticationManager="authenticationManager"
-                       accessDecisionManager="accessDecisionManager"
-                       xmlns="http://camel.apache.org/schema/spring-security"/>
- 
-  <authorizationPolicy id="user" access="ROLE_USER"
-                       xmlns="http://camel.apache.org/schema/spring-security"/>
-
-
-  <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
+    </bean>
+    <!-- RBAC -->
+    <spring-security:http realm="User Restrict Realm">
+        <spring-security:intercept-url access="hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')" pattern="/camel/**" method="GET"/>
+        <spring-security:intercept-url access="hasRole('ROLE_ADMIN')" pattern="/camel/**"/>
+        <spring-security:http-basic/>
+        <spring-security:remember-me/>
+    </spring-security:http>
+    <spring-security:authentication-manager alias="authenticationManager">
+        <spring-security:authentication-provider user-service-ref="userDetailsService"/>
+    </spring-security:authentication-manager>
+    <spring-security:user-service id="userDetailsService" properties="classpath:/users.properties"/>
+    <bean
+        class="org.springframework.security.access.vote.AffirmativeBased" id="accessDecisionManager">
+        <constructor-arg>
+            <bean class="org.springframework.security.access.vote.RoleVoter"/>
+        </constructor-arg>
+        <property name="allowIfAllAbstainDecisions" value="true"/>
+    </bean>
+    <authorizationPolicy access="ROLE_ADMIN"
+        accessDecisionManager="accessDecisionManager"
+        authenticationManager="authenticationManager" id="admin" xmlns="http://camel.apache.org/schema/spring-security"/>
+    <authorizationPolicy access="ROLE_USER" id="user" xmlns="http://camel.apache.org/schema/spring-security"/>
+    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
         <propertyPlaceholder id="properties" location="classpath:/config.properties"/>
-  
-   <dataFormats>
-     <json library="Jackson" id="json"/>
-   </dataFormats>
-  
-   <onException>
-     <exception>org.apache.camel.CamelAuthorizationException</exception>
-     <handled>
-        <constant>true</constant>
-     </handled>
-     <log message="Access Denied with the Policy of ${exception.policyId}!"/>
-     <transform>
-        <simple>Access Denied with the Policy of ${exception.policyId}!</simple>
-     </transform>
-   </onException>
-  
-   <onException>  
-     <exception>java.lang.Exception</exception>
-     <handled>
-          <constant>true</constant>
-     </handled>
-     <log message="Operation failed with exception: ${exception.stacktrace}" loggingLevel="ERROR" logName="com.redhat.waw.camel"/>
-     <transform>
-          <simple>${date:now:yyyy.MM.dd HH:mm:ss} ERROR Operation failed with message: ${exception.message}</simple>
-     </transform>
-   </onException>
-  
-   <restConfiguration component="servlet" contextPath="/camel" bindingMode="auto"/>
-  
-   <rest>
-    
-    <get uri="/v1/cache/{cid}">
-      <to uri="direct:getFromCacheUnlimited"/>
-    </get>
-    <get uri="/v1/cache/{cid}/{limit}">
-      <to uri="direct:getFromCache"/>
-    </get>
-    <get uri="/v1/cache/{cid}/{sortBy}/{sortOrder}/{limit}">
-      <to uri="direct:getFromCacheSorted"/>
-    </get>
-    <get uri="/v1/count/{cid}">
-      <to uri="direct:getFromCacheCount"/>
-    </get>
-    <get uri="/v1/cache/{cid}/{property}/{value}">
-      <to uri="direct:getByQueryFromCacheUnlimited"/>
-    </get>
-    <get uri="/v1/one/{cid}/{property}/{value}">
-      <to uri="direct:getByPropertyFromCache"/>
-    </get>
-    <get uri="/v1/getById/{cid}/{value}">
-      <to uri="direct:getByIdFromCache"/>
-    </get>
-    <get uri="/v1/cache/{cid}/{property}/{value}/{limit}">
-      <to uri="direct:getByQueryFromCache"/>
-    </get>
-    <get uri="/v1/cache/{cid}/nearby/{lat}/{lng}/{distance}/{limit}">
-      <to uri="direct:getNearbyFromCache"/>
-    </get>
-    <get uri="/v1/cache/{cid}/async/nearby/{lat}/{lng}/{distance}/{limit}">
-      <to uri="seda:getNearbyFromCache?waitForTaskToComplete=Never"/>
-    </get>
-    <get uri="/v1/cache/{cid}/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
-      <to uri="direct:getCheapestNearbyFromCache"/>
-    </get>
-    <get uri="/v1/cache/{cid}/async/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
-      <to uri="seda:getCheapestNearbyFromCache?waitForTaskToComplete=Never"/>
-    </get>
-    <get uri="/v1/cache/{cid}/stars/nearby/{lat}/{lng}/{distance}/{limit}">
-      <to uri="direct:getStarsNearbyFromCache"/>
-    </get>
-    <get uri="/v1/cache/{cid}/async/stars/nearby/{lat}/{lng}/{distance}/{limit}">
-      <to uri="seda:getStarsNearbyFromCache?waitForTaskToComplete=Never"/>
-    </get>
-    <get uri="/v1/count/{cid}/nearby/{lat}/{lng}/{distance}">
-      <to uri="direct:getNearbyFromCacheCount"/>
-    </get>
-    
-    <post uri="/v1/cache/{cid}">
-      <to uri="direct:putToCache"/>
-    </post>
-    <post uri="/v1/cache/multi/{cid}">
-      <to uri="direct:putToCacheMulti"/>
-    </post>
-    
-    <delete uri="/v1/cache/{cid}/{property}/{value}">
-      <to uri="direct:deleteFromCache"/>
-    </delete>
-  
-   </rest>
-  
-   <!-- insert -->
-  
-   <route id="Put to cache">
-    <from uri="direct:putToCache"/>
-    <log message="Putting to cache ${header.cid} document..." loggingLevel="INFO"/>
-    <recipientList>
-      <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=save</simple>
-    </recipientList>
-    <setBody>
-      <header>CamelMongoOid</header>
-    </setBody>
-    <log message="Inserted to collection ${header.cid} document with id ${header.CamelMongoOid}." loggingLevel="INFO"/>
-   </route>
-  
-  <route id="Put to cache multiple records">
-    <from uri="direct:putToCacheMulti"/>
-    <log message="Putting to cache ${header.cid} multiple documents..." loggingLevel="INFO"/>
-    <marshal ref="json"/>
-    <split parallelProcessing="true">
-      <method>net.gmsworld.server.camel.JsonArraySplitter</method>
-      <to uri="direct:putToCache"/>
-    </split>
-    <log message="Inserted to collection ${header.cid} multiple documents." loggingLevel="INFO"/>
-    <setBody>
-      <simple>{"status" : "ok"}</simple>
-    </setBody>
-  </route>
-  
-  <!-- delete -->
-  
-  <route id="Delete from cache">
-    <from uri="direct:deleteFromCache"/>
-    <log message="Delete from cache ${header.cid} objects matching ${header.property} : ${header.value}" loggingLevel="INFO"/>
-    <setBody>
-      <simple>{"${header.property}" : "${header.value}"}</simple>
-    </setBody>
-    <recipientList>
-      <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=remove</simple>
-    </recipientList>
-    <setBody>
-      <header>CamelMongoDbRecordsAffected</header>
-    </setBody>
-  </route>
-  
-  <!-- select -->
-  
-  <route id="Get from cache unlimited">
-    <from uri="direct:getFromCacheUnlimited"/>
-    <setHeader headerName="limit">
-      <simple>{{batchLimit}}</simple>
-    </setHeader>
-    <to uri="direct:getFromCache"/>
-  </route>
-  
-  <route id="Get from cache">
-    <from uri="direct:getFromCache"/>
-    <validate>
-      <simple>${header.limit} range '1..{{batchLimit}}'</simple>
-    </validate>
-    <log message="Get all from cache ${header.cid} with limit ${header.limit} by user ${header.authorization}" loggingLevel="INFO"/>
-    <setHeader headerName="CamelMongoDbSortBy">
-      <!--  descending by _id -->
-      <constant>{"_id" : -1}</constant>
-    </setHeader>
-    <setHeader headerName="CamelMongoDbLimit">
-      <simple>${header.limit}</simple>
-    </setHeader>
-    <setHeader headerName="CamelMongoDbBatchSize">
-      <constant>{{batchLimit}}</constant>
-    </setHeader>
-    <recipientList>
-      <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
-    </recipientList>
-  </route>
-  
-  <route id="Get from cache sorted">
-    <from uri="direct:getFromCacheSorted"/>
-    <validate>
-      <simple>${header.limit} range '1..{{batchLimit}}'</simple>
-    </validate>
-    <log message="Get all from cache ${header.cid} with limit ${header.limit} sorted by ${header.sortBy}: ${header.sortOrder}  by user ${header.authorization}" loggingLevel="INFO"/>
-    <setHeader headerName="CamelMongoDbSortBy">
-      <simple>{"${header.sortBy}" : ${header.sortOrder}}</simple>
-    </setHeader>
-    <setHeader headerName="CamelMongoDbLimit">
-      <simple>${header.limit}</simple>
-    </setHeader>
-    <setHeader headerName="CamelMongoDbBatchSize">
-      <constant>{{batchLimit}}</constant>
-    </setHeader>
-    <recipientList>
-      <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
-    </recipientList>
-  </route>
-  
-  <route id="Get from cache count">
-    <from uri="direct:getFromCacheCount"/>
-    <log message="Get count from cache ${header.cid} by user ${header.authorization}" loggingLevel="INFO"/>
-    <recipientList>
-      <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count</simple>
-    </recipientList>
-  </route>
-  
-  <route id="Get by query from cache unlimited">
-    <from uri="direct:getByQueryFromCacheUnlimited"/>
-    <setHeader headerName="limit">
-      <simple>{{batchLimit}}</simple>
-    </setHeader>
-    <to uri="direct:getByQueryFromCache"/>
-  </route>
-  
-  <route id="Get by query from cache">
-    <from uri="direct:getByQueryFromCache"/>
-    <validate>
-      <simple>${header.limit} range '1..{{batchLimit}}'</simple>
-    </validate>
-    <log message="Get from cache ${header.cid} object matching ${header.property} : ${header.value} with limit ${header.limit} by user ${header.authorization}" loggingLevel="INFO"/>
-    <setBody>
-      <simple>{"${header.property}" : "${header.value}"}</simple>
-    </setBody>
-    <setHeader headerName="CamelMongoDbSortBy">
-      <simple>{"_id" : -1}</simple>
-    </setHeader>
-    <setHeader headerName="CamelMongoDbLimit">
-      <simple>${header.limit}</simple>
-    </setHeader>
-    <recipientList>
-      <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
-    </recipientList>
-  </route>
-  
-  <route id="Get one by property from cache">
-    <from uri="direct:getByPropertyFromCache"/>
-    <log message="Get from cache ${header.cid} object matching ${header.property} : ${header.value} with limit ${header.limit} by user ${header.authorization}" loggingLevel="INFO"/>
-    <setBody>
-      <simple>{"${header.property}" : "${header.value}"}</simple>
-    </setBody>
-    <convertBodyTo type="com.mongodb.DBObject"/>
-    <recipientList>
-        <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findOneByQuery</simple>
-     </recipientList>
-  </route>
-  
-  <route id="Get one by id from cache">
-    <from uri="direct:getByIdFromCache"/>
-    <log message="Get from cache ${header.cid} object with id : ${header.value} by user ${header.authorization}" loggingLevel="INFO"/>
-    <setBody>
-      <simple>"${header.value}"</simple>
-    </setBody>
-    <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findById"/>
-  </route>
-  
-  <route id="Get nearby from cache">
-    <from uri="direct:getNearbyFromCache"/>
-    <validate>
-      <simple>${header.limit} range '1..{{nearbyLimit}}'</simple>
-    </validate>
-    <validate>
-      <simple>${header.distance} range '1..{{distanceLimit}}'</simple>
-    </validate>
-    <log message="Get from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} with limit ${header.limit} by user ${header.authorization}" loggingLevel="INFO"/>
-    <setBody>
-      <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
-    </setBody>
-    <setHeader headerName="CamelMongoDbLimit">
-      <simple>${header.limit}</simple>
-    </setHeader>
-    <recipientList>
-      <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
-    </recipientList>
-  </route>
-  
-  <route id="Get most stars nearby from cache">
-  	<from uri="direct:getStarsNearbyFromCache" />
-  	<setHeader headerName="CamelMongoDbSortBy">
-      <simple>{"properties.stars" : -1}</simple> 
-    </setHeader>
-    <to uri="direct:getNearbyFromCache"/>
-  </route>
-  
-  <route id="Get most stars nearby from cache and save">
-    <from uri="seda:getStarsNearbyFromCache"/>
-    <to uri="direct:getStarsNearbyFromCache"/>
-    <setHeader headerName="cid">
-      <simple>cache</simple>
-    </setHeader>
-    <setBody>
-      <simple>{ "type": "FeatureCollection", "properties": { "creationDate": ${bean:java.lang.System?method=currentTimeMillis} }, "_id" : "${header.lng}_${header.lat}_${header.distance}_${header.limit}_stars", "features" : ${body} }</simple>	
-    </setBody>
-    <to uri="direct:putToCache"/>
-  </route>
-  
-  <route id="Get cheapest nearby from cache">
-    <from uri="direct:getCheapestNearbyFromCache"/>
-    <validate>
-      <simple>${header.limit} range '1..{{nearbyLimit}}'</simple>
-    </validate>
-    <validate>
-      <simple>${header.distance} range '1..{{distanceLimit}}'</simple>
-    </validate>
-    <log message="Get cheapest from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} with limit ${header.limit} by user ${header.authorization}" loggingLevel="INFO"/>
-    <setBody>
-      <simple>{ "properties.minrate" : { $gt : 0 },  "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
-    </setBody>
-    <setHeader headerName="CamelMongoDbLimit">
-      <simple>${header.limit}</simple>
-    </setHeader>
-    <setHeader headerName="CamelMongoDbSortBy">
-      <simple>{"properties.minrate" : 1}</simple>
-    </setHeader>
-    <recipientList>
-      <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
-    </recipientList>
-  </route>
-  
-  <route id="Get cheapest nearby from cache and save">
-    <from uri="seda:getCheapestNearbyFromCache"/>
-    <to uri="direct:getCheapestNearbyFromCache"/>
-    <setHeader headerName="cid">
-      <simple>cache</simple>
-    </setHeader>
-    <setBody>
-      <simple>{ "type": "FeatureCollection", "properties": { "creationDate": ${bean:java.lang.System?method=currentTimeMillis} }, "_id" : "${header.lng}_${header.lat}_${header.distance}_${header.limit}_cheapest", "features" : ${body} }</simple>	
-    </setBody>
-    <to uri="direct:putToCache"/>
-  </route>
-  
-  <route id="Get nearby from cache count">
-    <from uri="direct:getNearbyFromCacheCount"/>
-    <log message="Get count from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} by user ${header.authorization}" loggingLevel="INFO"/>
-    <setBody>
-      <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
-    </setBody>
-    <recipientList>
-      <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count</simple>
-    </recipientList>
-  </route>
-  
-  <route id="Get nearby from cache and save">
-    <from uri="seda:getNearbyFromCache"/>
-    <to uri="direct:getNearbyFromCache"/>
-    <setHeader headerName="cid">
-      <simple>cache</simple>
-    </setHeader>
-    <setBody>
-      <simple>{ "type": "FeatureCollection", "properties": { "creationDate": ${bean:java.lang.System?method=currentTimeMillis} }, "_id" : "${header.lng}_${header.lat}_${header.distance}_${header.limit}", "features" : ${body} }</simple>	
-    </setBody>
-    <to uri="direct:putToCache"/>
-  </route>
-
+        <dataFormats>
+            <json id="json" library="Jackson"/>
+        </dataFormats>
+        <onException>
+            <exception>org.apache.camel.CamelAuthorizationException</exception>
+            <handled>
+                <constant>true</constant>
+            </handled>
+            <log message="Access Denied with the Policy of ${exception.policyId}!"/>
+            <transform>
+                <simple>Access Denied with the Policy of ${exception.policyId}!</simple>
+            </transform>
+        </onException>
+        <onException>
+            <exception>java.lang.Exception</exception>
+            <handled>
+                <constant>true</constant>
+            </handled>
+            <log logName="com.redhat.waw.camel" loggingLevel="ERROR" message="Operation failed with exception: ${exception.stacktrace}"/>
+            <transform>
+                <simple>${date:now:yyyy.MM.dd HH:mm:ss} ERROR Operation failed with message: ${exception.message}</simple>
+            </transform>
+        </onException>
+        <restConfiguration bindingMode="auto" component="servlet" contextPath="/camel"/>
+        <rest>
+            <get uri="/v1/cache/{cid}">
+                <to uri="direct:getFromCacheUnlimited"/>
+            </get>
+            <get uri="/v1/cache/{cid}/{limit}">
+                <to uri="direct:getFromCache"/>
+            </get>
+            <get uri="/v1/cache/{cid}/{sortBy}/{sortOrder}/{limit}">
+                <to uri="direct:getFromCacheSorted"/>
+            </get>
+            <get uri="/v1/count/{cid}">
+                <to uri="direct:getFromCacheCount"/>
+            </get>
+            <get uri="/v1/cache/{cid}/{property}/{value}">
+                <to uri="direct:getByQueryFromCacheUnlimited"/>
+            </get>
+            <get uri="/v1/one/{cid}/{property}/{value}">
+                <to uri="direct:getByPropertyFromCache"/>
+            </get>
+            <get uri="/v1/getById/{cid}/{value}">
+                <to uri="direct:getByIdFromCache"/>
+            </get>
+            <get uri="/v1/cache/{cid}/{property}/{value}/{limit}">
+                <to uri="direct:getByQueryFromCache"/>
+            </get>
+            <get uri="/v1/cache/{cid}/nearby/{lat}/{lng}/{distance}/{limit}">
+                <to uri="direct:getNearbyFromCache"/>
+            </get>
+            <get uri="/v1/cache/{cid}/async/nearby/{lat}/{lng}/{distance}/{limit}">
+                <to uri="seda:getNearbyFromCache?waitForTaskToComplete=Never"/>
+            </get>
+            <get uri="/v1/cache/{cid}/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
+                <to uri="direct:getCheapestNearbyFromCache"/>
+            </get>
+            <get uri="/v1/cache/{cid}/async/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
+                <to uri="seda:getCheapestNearbyFromCache?waitForTaskToComplete=Never"/>
+            </get>
+            <get uri="/v1/cache/{cid}/stars/nearby/{lat}/{lng}/{distance}/{limit}">
+                <to uri="direct:getStarsNearbyFromCache"/>
+            </get>
+            <get uri="/v1/cache/{cid}/async/stars/nearby/{lat}/{lng}/{distance}/{limit}">
+                <to uri="seda:getStarsNearbyFromCache?waitForTaskToComplete=Never"/>
+            </get>
+            <get uri="/v1/count/{cid}/nearby/{lat}/{lng}/{distance}">
+                <to uri="direct:getNearbyFromCacheCount"/>
+            </get>
+            <post uri="/v1/cache/{cid}">
+                <to uri="direct:putToCache"/>
+            </post>
+            <post uri="/v1/cache/multi/{cid}">
+                <to uri="direct:putToCacheMulti"/>
+            </post>
+            <delete uri="/v1/cache/{cid}/{property}/{value}">
+                <to uri="direct:deleteFromCache"/>
+            </delete>
+        </rest>
+        <!-- insert -->
+        <route id="Put to cache">
+            <from id="_from1" uri="direct:putToCache"/>
+            <log id="_log1" loggingLevel="INFO" message="Putting to cache ${header.cid} document..."/>
+            <recipientList id="_recipientList1">
+                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=save</simple>
+            </recipientList>
+            <setBody id="_setBody1">
+                <header>CamelMongoOid</header>
+            </setBody>
+            <log id="_log2" loggingLevel="INFO" message="Inserted to collection ${header.cid} document with id ${header.CamelMongoOid}."/>
+        </route>
+        <route id="Put to cache multiple records">
+            <from id="_from2" uri="direct:putToCacheMulti"/>
+            <log id="_log3" loggingLevel="INFO" message="Putting to cache ${header.cid} multiple documents..."/>
+            <marshal id="_marshal1" ref="json"/>
+            <split id="_split1" parallelProcessing="true">
+                <method>net.gmsworld.server.camel.JsonArraySplitter</method>
+                <to id="_to1" uri="direct:putToCache"/>
+            </split>
+            <log id="_log4" loggingLevel="INFO" message="Inserted to collection ${header.cid} multiple documents."/>
+            <setBody id="_setBody2">
+                <simple>{"status" : "ok"}</simple>
+            </setBody>
+        </route>
+        <!-- delete -->
+        <route id="Delete from cache">
+            <from id="_from3" uri="direct:deleteFromCache"/>
+            <log id="_log5" loggingLevel="INFO" message="Delete from cache ${header.cid} objects matching ${header.property} : ${header.value}"/>
+            <setBody id="_setBody3">
+                <simple>{"${header.property}" : "${header.value}"}</simple>
+            </setBody>
+            <recipientList id="_recipientList2">
+                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=remove</simple>
+            </recipientList>
+            <setBody id="_setBody4">
+                <header>CamelMongoDbRecordsAffected</header>
+            </setBody>
+        </route>
+        <!-- select -->
+        <route id="Get from cache unlimited">
+            <from id="_from4" uri="direct:getFromCacheUnlimited"/>
+            <setHeader headerName="limit" id="_setHeader1">
+                <simple>{{batchLimit}}</simple>
+            </setHeader>
+            <to id="_to2" uri="direct:getFromCache"/>
+        </route>
+        <route id="Get from cache">
+            <from id="_from5" uri="direct:getFromCache"/>
+            <validate id="_validate1">
+                <simple>${header.limit} range '1..{{batchLimit}}'</simple>
+            </validate>
+            <log id="_log6" loggingLevel="INFO" message="Get all from cache ${header.cid} with limit ${header.limit} by user ${header.authorization}"/>
+            <setHeader headerName="CamelMongoDbSortBy" id="_setHeader2">
+                <!--  descending by _id -->
+                <constant>{"_id" : -1}</constant>
+            </setHeader>
+            <setHeader headerName="CamelMongoDbLimit" id="_setHeader3">
+                <simple>${header.limit}</simple>
+            </setHeader>
+            <setHeader headerName="CamelMongoDbBatchSize" id="_setHeader4">
+                <constant>{{batchLimit}}</constant>
+            </setHeader>
+            <recipientList id="_recipientList3">
+                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
+            </recipientList>
+        </route>
+        <route id="Get from cache sorted">
+            <from id="_from6" uri="direct:getFromCacheSorted"/>
+            <validate id="_validate2">
+                <simple>${header.limit} range '1..{{batchLimit}}'</simple>
+            </validate>
+            <log id="_log7" loggingLevel="INFO" message="Get all from cache ${header.cid} with limit ${header.limit} sorted by ${header.sortBy}: ${header.sortOrder}  by user ${header.authorization}"/>
+            <setHeader headerName="CamelMongoDbSortBy" id="_setHeader5">
+                <simple>{"${header.sortBy}" : ${header.sortOrder}}</simple>
+            </setHeader>
+            <setHeader headerName="CamelMongoDbLimit" id="_setHeader6">
+                <simple>${header.limit}</simple>
+            </setHeader>
+            <setHeader headerName="CamelMongoDbBatchSize" id="_setHeader7">
+                <constant>{{batchLimit}}</constant>
+            </setHeader>
+            <recipientList id="_recipientList4">
+                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
+            </recipientList>
+        </route>
+        <route id="Get from cache count">
+            <from id="_from7" uri="direct:getFromCacheCount"/>
+            <log id="_log8" loggingLevel="INFO" message="Get count from cache ${header.cid} by user ${header.authorization}"/>
+            <recipientList id="_recipientList5">
+                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count</simple>
+            </recipientList>
+        </route>
+        <route id="Get by query from cache unlimited">
+            <from id="_from8" uri="direct:getByQueryFromCacheUnlimited"/>
+            <setHeader headerName="limit" id="_setHeader8">
+                <simple>{{batchLimit}}</simple>
+            </setHeader>
+            <to id="_to3" uri="direct:getByQueryFromCache"/>
+        </route>
+        <route id="Get by query from cache">
+            <from id="_from9" uri="direct:getByQueryFromCache"/>
+            <validate id="_validate3">
+                <simple>${header.limit} range '1..{{batchLimit}}'</simple>
+            </validate>
+            <log id="_log9" loggingLevel="INFO" message="Get from cache ${header.cid} object matching ${header.property} : ${header.value} with limit ${header.limit} by user ${header.authorization}"/>
+            <setBody id="_setBody5">
+                <simple>{"${header.property}" : "${header.value}"}</simple>
+            </setBody>
+            <setHeader headerName="CamelMongoDbSortBy" id="_setHeader9">
+                <simple>{"_id" : -1}</simple>
+            </setHeader>
+            <setHeader headerName="CamelMongoDbLimit" id="_setHeader10">
+                <simple>${header.limit}</simple>
+            </setHeader>
+            <recipientList id="_recipientList6">
+                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
+            </recipientList>
+        </route>
+        <route id="Get one by property from cache">
+            <from id="_from10" uri="direct:getByPropertyFromCache"/>
+            <log id="_log10" loggingLevel="INFO" message="Get from cache ${header.cid} object matching ${header.property} : ${header.value} with limit ${header.limit} by user ${header.authorization}"/>
+            <setBody id="_setBody6">
+                <simple>{"${header.property}" : "${header.value}"}</simple>
+            </setBody>
+            <convertBodyTo id="_convertBodyTo1" type="com.mongodb.DBObject"/>
+            <recipientList id="_recipientList7">
+                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findOneByQuery</simple>
+            </recipientList>
+        </route>
+        <route id="Get one by id from cache">
+            <from id="_from11" uri="direct:getByIdFromCache"/>
+            <log id="_log11" loggingLevel="INFO" message="Get from cache ${header.cid} object with id : ${header.value} by user ${header.authorization}"/>
+            <setBody id="_setBody7">
+                <simple>"${header.value}"</simple>
+            </setBody>
+            <toD id="_toD1" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findById"/>
+        </route>
+        <route id="Get nearby from cache">
+            <from id="_from12" uri="direct:getNearbyFromCache"/>
+            <validate id="_validate4">
+                <simple>${header.limit} range '1..{{nearbyLimit}}'</simple>
+            </validate>
+            <validate id="_validate5">
+                <simple>${header.distance} range '1..{{distanceLimit}}'</simple>
+            </validate>
+            <log id="_log12" loggingLevel="INFO" message="Get from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} with limit ${header.limit} by user ${header.authorization}"/>
+            <setBody id="_setBody8">
+                <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
+            </setBody>
+            <setHeader headerName="CamelMongoDbLimit" id="_setHeader11">
+                <simple>${header.limit}</simple>
+            </setHeader>
+            <recipientList id="_recipientList8">
+                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
+            </recipientList>
+        </route>
+        <route id="Get most stars nearby from cache">
+            <from id="_from13" uri="direct:getStarsNearbyFromCache"/>
+            <setHeader headerName="CamelMongoDbSortBy" id="_setHeader12">
+                <simple>{"properties.stars" : -1}</simple>
+            </setHeader>
+            <to id="_to4" uri="direct:getNearbyFromCache"/>
+        </route>
+        <route id="Get most stars nearby from cache and save">
+            <from id="_from14" uri="seda:getStarsNearbyFromCache"/>
+            <to id="_to5" uri="direct:getStarsNearbyFromCache"/>
+            <setHeader headerName="cid" id="_setHeader13">
+                <simple>cache</simple>
+            </setHeader>
+            <setBody id="_setBody9">
+                <simple>{ "type": "FeatureCollection", "properties": { "creationDate": ${bean:java.lang.System?method=currentTimeMillis} }, "_id" : "${header.lng}_${header.lat}_${header.distance}_${header.limit}_stars", "features" : ${body} }</simple>
+            </setBody>
+            <to id="_to6" uri="direct:putToCache"/>
+        </route>
+        <route id="Get cheapest nearby from cache">
+            <from id="_from15" uri="direct:getCheapestNearbyFromCache"/>
+            <validate id="_validate6">
+                <simple>${header.limit} range '1..{{nearbyLimit}}'</simple>
+            </validate>
+            <validate id="_validate7">
+                <simple>${header.distance} range '1..{{distanceLimit}}'</simple>
+            </validate>
+            <log id="_log13" loggingLevel="INFO" message="Get cheapest from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} with limit ${header.limit} by user ${header.authorization}"/>
+            <setBody id="_setBody10">
+                <simple>{ "properties.minrate" : { $gt : 0 },  "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
+            </setBody>
+            <setHeader headerName="CamelMongoDbLimit" id="_setHeader14">
+                <simple>${header.limit}</simple>
+            </setHeader>
+            <setHeader headerName="CamelMongoDbSortBy" id="_setHeader15">
+                <simple>{"properties.minrate" : 1}</simple>
+            </setHeader>
+            <recipientList id="_recipientList9">
+                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
+            </recipientList>
+        </route>
+        <route id="Get cheapest nearby from cache and save">
+            <from id="_from16" uri="seda:getCheapestNearbyFromCache"/>
+            <to id="_to7" uri="direct:getCheapestNearbyFromCache"/>
+            <setHeader headerName="cid" id="_setHeader16">
+                <simple>cache</simple>
+            </setHeader>
+            <setBody id="_setBody11">
+                <simple>{ "type": "FeatureCollection", "properties": { "creationDate": ${bean:java.lang.System?method=currentTimeMillis} }, "_id" : "${header.lng}_${header.lat}_${header.distance}_${header.limit}_cheapest", "features" : ${body} }</simple>
+            </setBody>
+            <to id="_to8" uri="direct:putToCache"/>
+        </route>
+        <route id="Get nearby from cache count">
+            <from id="_from17" uri="direct:getNearbyFromCacheCount"/>
+            <log id="_log14" loggingLevel="INFO" message="Get count from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} by user ${header.authorization}"/>
+            <setBody id="_setBody12">
+                <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
+            </setBody>
+            <recipientList id="_recipientList10">
+                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count</simple>
+            </recipientList>
+        </route>
+        <route id="Get nearby from cache and save">
+            <from id="_from18" uri="seda:getNearbyFromCache"/>
+            <to id="_to9" uri="direct:getNearbyFromCache"/>
+            <setHeader headerName="cid" id="_setHeader17">
+                <simple>cache</simple>
+            </setHeader>
+            <setBody id="_setBody13">
+                <simple>{ "type": "FeatureCollection", "properties": { "creationDate": ${bean:java.lang.System?method=currentTimeMillis} }, "_id" : "${header.lng}_${header.lat}_${header.distance}_${header.limit}", "features" : ${body} }</simple>
+            </setBody>
+            <to id="_to10" uri="direct:putToCache"/>
+        </route>
     </camelContext>
 </beans>
