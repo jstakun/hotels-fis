@@ -29,9 +29,11 @@
     <!-- RBAC -->
     <spring-security:http realm="User Restrict Realm">
         <spring-security:intercept-url access="hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')" pattern="/camel/**" method="GET"/>
-        <spring-security:intercept-url access="hasRole('ROLE_ADMIN')" pattern="/camel/**"/>
+        <spring-security:intercept-url access="hasRole('ROLE_ADMIN')" pattern="/camel/**" method="POST"/>
+        <spring-security:intercept-url access="hasRole('ROLE_ADMIN')" pattern="/camel/**" method="DELETE"/>
         <spring-security:http-basic/>
         <spring-security:remember-me/>
+        <spring-security:csrf disabled="true"/>
     </spring-security:http>
     <spring-security:authentication-manager alias="authenticationManager">
         <spring-security:authentication-provider user-service-ref="userDetailsService"/>
