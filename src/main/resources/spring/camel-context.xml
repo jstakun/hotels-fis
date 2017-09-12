@@ -28,9 +28,13 @@
     </bean>
     <!-- RBAC -->
     <spring-security:http realm="User Restrict Realm">
-        <spring-security:intercept-url access="hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')" pattern="/camel/**" method="GET"/>
-        <spring-security:intercept-url access="hasRole('ROLE_ADMIN')" pattern="/camel/**" method="POST"/>
-        <spring-security:intercept-url access="hasRole('ROLE_ADMIN')" pattern="/camel/**" method="DELETE"/>
+        <spring-security:intercept-url
+            access="hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')"
+            method="GET" pattern="/camel/**"/>
+        <spring-security:intercept-url access="hasRole('ROLE_ADMIN')"
+            method="POST" pattern="/camel/**"/>
+        <spring-security:intercept-url access="hasRole('ROLE_ADMIN')"
+            method="DELETE" pattern="/camel/**"/>
         <spring-security:http-basic/>
         <spring-security:remember-me/>
         <spring-security:csrf disabled="true"/>
@@ -70,79 +74,110 @@
             <handled>
                 <constant>true</constant>
             </handled>
-            <log logName="com.redhat.waw.camel" loggingLevel="ERROR" message="Operation failed with exception: ${exception.stacktrace}"/>
+            <log loggingLevel="ERROR" message="Operation failed with exception: ${exception.message}"/>
             <transform>
                 <simple>${date:now:yyyy.MM.dd HH:mm:ss} ERROR Operation failed with message: ${exception.message}</simple>
             </transform>
         </onException>
-        <restConfiguration bindingMode="auto" component="servlet" contextPath="/camel"/>
+        <restConfiguration apiContextPath="api-docs" bindingMode="auto"
+            component="servlet" contextPath="/camel">
+            <apiProperty key="cors" value="true"/>
+            <apiProperty key="api.title" value="Hotels API"/>
+            <apiProperty key="api.version" value="1.0.0"/>
+        </restConfiguration>
         <rest>
             <get uri="/v1/cache/{cid}">
+                <description>Retrieve all hotels data</description>
                 <to uri="direct:getFromCacheUnlimited"/>
             </get>
             <get uri="/v1/cache/{cid}/{limit}">
+                <description>Retrieve hotels data with limit</description>
                 <to uri="direct:getFromCache"/>
             </get>
             <get uri="/v1/cache/{cid}/{sortBy}/{sortOrder}/{limit}">
+                <description>Retrieve hotels data with limit sorted</description>
                 <to uri="direct:getFromCacheSorted"/>
             </get>
             <get uri="/v1/count/{cid}">
+                <description>Count all hotels</description>  
                 <to uri="direct:getFromCacheCount"/>
             </get>
             <get uri="/v1/cache/{cid}/{property}/{value}">
+                <description>Retrieve hotels data by property value</description>
                 <to uri="direct:getByQueryFromCacheUnlimited"/>
             </get>
             <get uri="/v1/one/{cid}/{property}/{value}">
+                <description>Retrieve one hotel data by property value</description>
                 <to uri="direct:getByPropertyFromCache"/>
             </get>
             <get uri="/v1/getById/{cid}/{value}">
+                <description>Retrieve hotels data by id</description>
                 <to uri="direct:getByIdFromCache"/>
             </get>
             <get uri="/v1/cache/{cid}/{property}/{value}/{limit}">
+                <description>Retrieve hotels data by property value with limit</description>
                 <to uri="direct:getByQueryFromCache"/>
             </get>
             <get uri="/v1/cache/{cid}/nearby/{lat}/{lng}/{distance}/{limit}">
+                <description>Retrieve hotels data in distance from coordinate with limit</description> 
                 <to uri="direct:getNearbyFromCache"/>
             </get>
             <get uri="/v1/cache/{cid}/async/nearby/{lat}/{lng}/{distance}/{limit}">
+                <description>Retrieve hotels data in distance from coordinate with limit asynchronous</description>
                 <to uri="seda:getNearbyFromCache?waitForTaskToComplete=Never"/>
             </get>
             <get uri="/v1/cache/{cid}/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
+                <description>Retrieve cheapest hotels data in distance from coordinate with limit</description>
                 <to uri="direct:getCheapestNearbyFromCache"/>
             </get>
             <get uri="/v1/cache/{cid}/async/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
+                <description>Retrieve cheapest hotels data in distance from coordinate with limit asynchronous</description>
                 <to uri="seda:getCheapestNearbyFromCache?waitForTaskToComplete=Never"/>
             </get>
             <get uri="/v1/cache/{cid}/stars/nearby/{lat}/{lng}/{distance}/{limit}">
+                <description>Retrieve hotels data by star rating in distance from coordinate with limit</description>
                 <to uri="direct:getStarsNearbyFromCache"/>
             </get>
             <get uri="/v1/cache/{cid}/async/stars/nearby/{lat}/{lng}/{distance}/{limit}">
+                <description>Retrieve hotels data by star rating in distance from coordinate with limit asynchronous</description>
                 <to uri="seda:getStarsNearbyFromCache?waitForTaskToComplete=Never"/>
             </get>
             <get uri="/v1/count/{cid}/nearby/{lat}/{lng}/{distance}">
+                <description>Count hotels in distance from coordinate</description>
                 <to uri="direct:getNearbyFromCacheCount"/>
             </get>
             <post uri="/v1/cache/{cid}">
+                <description>Save hotels data</description>
                 <to uri="direct:putToCache"/>
             </post>
             <post uri="/v1/cache/multi/{cid}">
+                <description>Save multiple hotels data</description>
                 <to uri="direct:putToCacheMulti"/>
             </post>
             <delete uri="/v1/cache/{cid}/{property}/{value}">
+                <description>Delete hotels data by property value</description>
                 <to uri="direct:deleteFromCache"/>
             </delete>
         </rest>
         <!-- insert -->
         <route id="Put to cache">
             <from id="_from1" uri="direct:putToCache"/>
-            <log id="_log1" loggingLevel="INFO" message="Putting to cache ${header.cid} document..."/>
-            <recipientList id="_recipientList1">
-                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=save</simple>
-            </recipientList>
-            <setBody id="_setBody1">
-                <header>CamelMongoOid</header>
-            </setBody>
-            <log id="_log2" loggingLevel="INFO" message="Inserted to collection ${header.cid} document with id ${header.CamelMongoOid}."/>
+            <doTry id="_doTry1">
+                <log id="_log1" loggingLevel="INFO" message="Putting to cache ${header.cid} document..."/>
+                <convertBodyTo id="_convertBodyTo2" type="com.mongodb.DBObject"/>
+                <toD id="_toD2" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=save"/>
+                <setBody id="_setBody1">
+                    <header>CamelMongoOid</header>
+                </setBody>
+                <log id="_log2" loggingLevel="INFO" message="Inserted to collection ${header.cid} document with id ${header.CamelMongoOid}."/>
+                <doCatch id="_doCatch1">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <log id="_log15" loggingLevel="ERROR" message="Operation failed with exception: ${exception.message}"/>
+                </doCatch>
+            </doTry>
         </route>
         <route id="Put to cache multiple records">
             <from id="_from2" uri="direct:putToCacheMulti"/>
@@ -305,7 +340,7 @@
             <setBody id="_setBody9">
                 <simple>{ "type": "FeatureCollection", "properties": { "creationDate": ${bean:java.lang.System?method=currentTimeMillis} }, "_id" : "${header.lng}_${header.lat}_${header.distance}_${header.limit}_stars", "features" : ${body} }</simple>
             </setBody>
-            <to id="_to6" uri="direct:putToCache"/>
+            <wireTap id="_wireTap1" uri="direct:putToCache"/>
         </route>
         <route id="Get cheapest nearby from cache">
             <from id="_from15" uri="direct:getCheapestNearbyFromCache"/>
@@ -338,7 +373,7 @@
             <setBody id="_setBody11">
                 <simple>{ "type": "FeatureCollection", "properties": { "creationDate": ${bean:java.lang.System?method=currentTimeMillis} }, "_id" : "${header.lng}_${header.lat}_${header.distance}_${header.limit}_cheapest", "features" : ${body} }</simple>
             </setBody>
-            <to id="_to8" uri="direct:putToCache"/>
+            <wireTap id="_wireTap2" uri="direct:putToCache"/>
         </route>
         <route id="Get nearby from cache count">
             <from id="_from17" uri="direct:getNearbyFromCacheCount"/>
@@ -346,9 +381,7 @@
             <setBody id="_setBody12">
                 <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
             </setBody>
-            <recipientList id="_recipientList10">
-                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count</simple>
-            </recipientList>
+            <toD id="_toD3" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count"/>
         </route>
         <route id="Get nearby from cache and save">
             <from id="_from18" uri="seda:getNearbyFromCache"/>
@@ -359,7 +392,7 @@
             <setBody id="_setBody13">
                 <simple>{ "type": "FeatureCollection", "properties": { "creationDate": ${bean:java.lang.System?method=currentTimeMillis} }, "_id" : "${header.lng}_${header.lat}_${header.distance}_${header.limit}", "features" : ${body} }</simple>
             </setBody>
-            <to id="_to10" uri="direct:putToCache"/>
+            <wireTap id="_wireTap3" uri="direct:putToCache"/>
         </route>
     </camelContext>
 </beans>
