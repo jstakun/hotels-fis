@@ -31,7 +31,8 @@
         <spring-security:intercept-url
             access="hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')"
             method="GET" pattern="/camel/**"/>
-        <spring-security:intercept-url access="hasRole('ROLE_ADMIN')"
+        <spring-security:intercept-url
+            access="hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')"
             method="POST" pattern="/camel/**"/>
         <spring-security:intercept-url access="hasRole('ROLE_ADMIN')"
             method="DELETE" pattern="/camel/**"/>
@@ -99,7 +100,7 @@
                 <to uri="direct:getFromCacheSorted"/>
             </get>
             <get uri="/v1/count/{cid}">
-                <description>Count all hotels</description>  
+                <description>Count all hotels</description>
                 <to uri="direct:getFromCacheCount"/>
             </get>
             <get uri="/v1/cache/{cid}/{property}/{value}">
@@ -119,7 +120,7 @@
                 <to uri="direct:getByQueryFromCache"/>
             </get>
             <get uri="/v1/cache/{cid}/nearby/{lat}/{lng}/{distance}/{limit}">
-                <description>Retrieve hotels data in distance from coordinate with limit</description> 
+                <description>Retrieve hotels data in distance from coordinate with limit</description>
                 <to uri="direct:getNearbyFromCache"/>
             </get>
             <get uri="/v1/cache/{cid}/async/nearby/{lat}/{lng}/{distance}/{limit}">
