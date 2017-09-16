@@ -251,9 +251,9 @@
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="number" defaultValue="52.25"
-                    description="Latitude" name="property" type="path"/>
+                    description="Latitude" name="lat" type="path"/>
                 <param dataType="number" defaultValue="20.95"
-                    description="Longitude" name="value" type="path"/>
+                    description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
                     description="Distance in meters"
                     name="distance" type="path"/>
@@ -277,9 +277,9 @@
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="number" defaultValue="52.25"
-                    description="Latitude" name="property" type="path"/>
+                    description="Latitude" name="lat" type="path"/>
                 <param dataType="number" defaultValue="20.95"
-                    description="Longitude" name="value" type="path"/>
+                    description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
                     description="Distance in meters"
                     name="distance" type="path"/>
@@ -303,9 +303,9 @@
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="number" defaultValue="52.25"
-                    description="Latitude" name="property" type="path"/>
+                    description="Latitude" name="lat" type="path"/>
                 <param dataType="number" defaultValue="20.95"
-                    description="Longitude" name="value" type="path"/>
+                    description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
                     description="Distance in meters"
                     name="distance" type="path"/>
@@ -329,9 +329,9 @@
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="number" defaultValue="52.25"
-                    description="Latitude" name="property" type="path"/>
+                    description="Latitude" name="lat" type="path"/>
                 <param dataType="number" defaultValue="20.95"
-                    description="Longitude" name="value" type="path"/>
+                    description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
                     description="Distance in meters"
                     name="distance" type="path"/>
@@ -355,9 +355,9 @@
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="number" defaultValue="52.25"
-                    description="Latitude" name="property" type="path"/>
+                    description="Latitude" name="lat" type="path"/>
                 <param dataType="number" defaultValue="20.95"
-                    description="Longitude" name="value" type="path"/>
+                    description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
                     description="Distance in meters"
                     name="distance" type="path"/>
@@ -381,9 +381,9 @@
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="number" defaultValue="52.25"
-                    description="Latitude" name="property" type="path"/>
+                    description="Latitude" name="lat" type="path"/>
                 <param dataType="number" defaultValue="20.95"
-                    description="Longitude" name="value" type="path"/>
+                    description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
                     description="Distance in meters"
                     name="distance" type="path"/>
@@ -407,9 +407,9 @@
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="number" defaultValue="52.25"
-                    description="Latitude" name="property" type="path"/>
+                    description="Latitude" name="lat" type="path"/>
                 <param dataType="number" defaultValue="20.95"
-                    description="Longitude" name="value" type="path"/>
+                    description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
                     description="Distance in meters"
                     name="distance" type="path"/>
@@ -429,6 +429,8 @@
                 <description>Save hotels data</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
+                <param dataType="string" defaultValue=""
+                    description="Hotel data to save" name="data" type="body"/>    
                 <responseMessage message="Hotels that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>        
@@ -445,6 +447,8 @@
                 <description>Save multiple hotels data</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
+                <param dataType="string" defaultValue=""
+                    description="Hotels data to save" name="data" type="body"/>    
                 <responseMessage message="Hotels that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>        
@@ -461,9 +465,9 @@
                 <description>Delete hotels data by property value</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue=""
                     description="Property name" name="property" type="path"/>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue=""
                     description="Property value" name="value" type="path"/>
                 <responseMessage message="Hotels list that was found"/>
                 <responseMessage code="404" message="No response received"/>
