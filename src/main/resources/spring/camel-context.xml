@@ -107,13 +107,13 @@
                 <description>Count all hotels</description>
                 <param name="cid" type="path" description="Hotels collection name" dataType="string" defaultValue="hotels"/>
                 <responseMessage message="All hotels count"/>
-                <responseMessage code="500" message="Internal server error"/>
+                <responseMessage code="404" message="No response received"/>
 				<route>
                 	<to uri="direct:getFromCacheCount"/>
                 	<filter>
             			<simple>${body} == null</simple>
             			<setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
-              				<constant>500</constant>
+              				<constant>404</constant>
             			</setHeader>
           			</filter>
 				</route>
@@ -275,6 +275,15 @@
             <recipientList id="_recipientList5">
                 <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count</simple>
             </recipientList>
+            <filter>
+            	<simple>${body} == null</simple>
+                <setBody>
+                	<constant>0</constant>    
+                </setBody>
+            </filter>
+            <setBody>
+                <simple>{"count": ${body}}</simple>
+            </setBody>
         </route>
         <route id="Get by query from cache unlimited">
             <from id="_from8" uri="direct:getByQueryFromCacheUnlimited"/>
