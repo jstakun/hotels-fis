@@ -81,10 +81,11 @@
             </transform>
         </onException>
         <restConfiguration apiContextPath="api-docs" bindingMode="auto"
-            component="servlet" contextPath="/camel">
-            <apiProperty key="cors" value="true"/>
+            component="servlet" contextPath="/camel" enableCORS="true">
             <apiProperty key="api.title" value="Hotels API"/>
             <apiProperty key="api.version" value="1.0.0"/>
+            <apiProperty key="api.contact.email" value="jstakun@redhat.com"/>
+            <apiProperty key="host" value="openapi-hotels.b9ad.pro-us-east-1.openshiftapps.com"/>
         </restConfiguration>
         <rest>
             <get uri="/v1/cache/{cid}">
@@ -93,6 +94,9 @@
             </get>
             <get uri="/v1/cache/{cid}/{limit}">
                 <description>Retrieve hotels data with limit</description>
+                <param name="cid" type="path" description="Hotels collection name" dataType="string" defaultValue="hotels"/>
+                <param name="limit" type="path" description="Hotels data limit to return" dataType="integer"/>
+                <responseMessage message="Hotels list that was found"/>
                 <to uri="direct:getFromCache"/>
             </get>
             <get uri="/v1/cache/{cid}/{sortBy}/{sortOrder}/{limit}">
@@ -101,7 +105,18 @@
             </get>
             <get uri="/v1/count/{cid}">
                 <description>Count all hotels</description>
-                <to uri="direct:getFromCacheCount"/>
+                <param name="cid" type="path" description="Hotels collection name" dataType="string" defaultValue="hotels"/>
+                <responseMessage message="All hotels count"/>
+                <responseMessage code="500" message="Internal server error"/>
+				<route>
+                	<to uri="direct:getFromCacheCount"/>
+                	<filter>
+            			<simple>${body} == null</simple>
+            			<setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+              				<constant>500</constant>
+            			</setHeader>
+          			</filter>
+				</route>
             </get>
             <get uri="/v1/cache/{cid}/{property}/{value}">
                 <description>Retrieve hotels data by property value</description>
