@@ -30,12 +30,12 @@
     <spring-security:http realm="User Restrict Realm">
         <spring-security:intercept-url
             access="hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')"
-            method="GET" pattern="/camel/**"/>
+            method="GET" pattern="/camel/v1/**"/>
         <spring-security:intercept-url
             access="hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')"
-            method="POST" pattern="/camel/**"/>
+            method="POST" pattern="/camel/v1/**"/>
         <spring-security:intercept-url access="hasRole('ROLE_ADMIN')"
-            method="DELETE" pattern="/camel/**"/>
+            method="DELETE" pattern="/camel/v1/**"/>
         <spring-security:http-basic/>
         <spring-security:remember-me/>
         <spring-security:csrf disabled="true"/>
