@@ -189,9 +189,9 @@
                 <description>Retrieve one hotel data by property value</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="_id"
                     description="Property name" name="property" type="path"/>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="1000039"
                     description="Property value" name="value" type="path"/>
                 <responseMessage message="Hotel that was found"/>
                 <responseMessage code="404" message="No response received"/>
@@ -210,7 +210,7 @@
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="string" defaultValue=""
-                    description="Hotel Id" name="value" type="path"/>
+                    description="Hotel Id" name="id" type="path"/>
                 <responseMessage message="Hotel that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
