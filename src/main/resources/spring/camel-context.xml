@@ -95,9 +95,18 @@
             <get uri="/v1/cache/{cid}/{limit}">
                 <description>Retrieve hotels data with limit</description>
                 <param name="cid" type="path" description="Hotels collection name" dataType="string" defaultValue="hotels"/>
-                <param name="limit" type="path" description="Hotels data limit to return" dataType="integer"/>
+                <param name="limit" type="path" description="Hotels data limit to return" dataType="integer" defaultValue="10"/>
                 <responseMessage message="Hotels list that was found"/>
-                <to uri="direct:getFromCache"/>
+                <responseMessage code="404" message="No response received"/>
+				<route>
+                	<to uri="direct:getFromCache"/>
+                	<filter>
+            			<simple>${body} == null</simple>
+            			<setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+              				<constant>404</constant>
+            			</setHeader>
+          			</filter>
+				</route>
             </get>
             <get uri="/v1/cache/{cid}/{sortBy}/{sortOrder}/{limit}">
                 <description>Retrieve hotels data with limit sorted</description>
@@ -116,6 +125,9 @@
               				<constant>404</constant>
             			</setHeader>
           			</filter>
+          			<setHeader headerName="Exchange.CONTENT_TYPE">
+              			<constant>text/plain</constant>
+            		</setHeader>
 				</route>
             </get>
             <get uri="/v1/cache/{cid}/{property}/{value}">
@@ -275,15 +287,6 @@
             <recipientList id="_recipientList5">
                 <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count</simple>
             </recipientList>
-            <filter>
-            	<simple>${body} == null</simple>
-                <setBody>
-                	<constant>0</constant>    
-                </setBody>
-            </filter>
-            <setBody>
-                <simple>{"count": ${body}}</simple>
-            </setBody>
         </route>
         <route id="Get by query from cache unlimited">
             <from id="_from8" uri="direct:getByQueryFromCacheUnlimited"/>
