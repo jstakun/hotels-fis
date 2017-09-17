@@ -137,7 +137,7 @@
                         <value>1</value>
                         <value>-1</value>
                     </allowableValues>
-                </param>    
+                </param>
                 <param dataType="integer" defaultValue="10"
                     description="Hotels data limit to return"
                     name="limit" type="path"/>
@@ -173,9 +173,9 @@
                 <description>Retrieve hotels data by property value</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="_id"
                     description="Property name" name="property" type="path"/>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="1000039"
                     description="Property value" name="value" type="path"/>
                 <responseMessage message="Hotels list that was found"/>
                 <responseMessage code="404" message="No response received"/>
@@ -231,9 +231,9 @@
                 <description>Retrieve hotels data by property value with limit</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="_id"
                     description="Property name" name="property" type="path"/>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="1000039"
                     description="Property value" name="value" type="path"/>
                 <param dataType="integer" defaultValue="10"
                     description="Hotels data limit to return"
@@ -292,8 +292,8 @@
                 <route>
                     <to uri="seda:getNearbyFromCache?waitForTaskToComplete=Never"/>
                     <setBody>
-                		<simple>{"status": "ok"}</simple>
-            		</setBody>
+                        <simple>{"status": "ok"}</simple>
+                    </setBody>
                 </route>
             </get>
             <get uri="/v1/cache/{cid}/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
@@ -321,7 +321,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/async/cheapest/nearby/{lat}/{lng}/{distance}/{limit}" produces="application/json">
+            <get produces="application/json" uri="/v1/cache/{cid}/async/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve cheapest hotels data in distance from coordinate with limit asynchronous</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -338,8 +338,8 @@
                 <route>
                     <to uri="seda:getCheapestNearbyFromCache?waitForTaskToComplete=Never"/>
                     <setBody>
-                		<simple>{"status": "ok"}</simple>
-            		</setBody>
+                        <simple>{"status": "ok"}</simple>
+                    </setBody>
                 </route>
             </get>
             <get uri="/v1/cache/{cid}/stars/nearby/{lat}/{lng}/{distance}/{limit}">
@@ -367,7 +367,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/async/stars/nearby/{lat}/{lng}/{distance}/{limit}" produces="application/json">
+            <get produces="application/json" uri="/v1/cache/{cid}/async/stars/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve hotels data by star rating in distance from coordinate with limit asynchronous</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -384,8 +384,8 @@
                 <route>
                     <to uri="seda:getStarsNearbyFromCache?waitForTaskToComplete=Never"/>
                     <setBody>
-                		<simple>{"status": "ok"}</simple>
-            		</setBody>
+                        <simple>{"status": "ok"}</simple>
+                    </setBody>
                 </route>
             </get>
             <get produces="text/plain" uri="/v1/count/{cid}/nearby/{lat}/{lng}/{distance}">
@@ -410,7 +410,7 @@
                     </filter>
                 </route>
             </get>
-            <post uri="/v1/cache/{cid}" produces="text/plain">
+            <post produces="text/plain" uri="/v1/cache/{cid}">
                 <description>Save hotel data</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -450,9 +450,9 @@
                 <description>Delete hotels data by property value</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
-                <param dataType="string" defaultValue=""
+                <param dataType="string" defaultValue="_id"
                     description="Property name" name="property" type="path"/>
-                <param dataType="string" defaultValue=""
+                <param dataType="string" defaultValue="1000039"
                     description="Property value" name="value" type="path"/>
                 <responseMessage message="Hotels list that was found"/>
                 <responseMessage code="404" message="No response received"/>
@@ -496,10 +496,10 @@
                 <to id="_to1" uri="direct:putToCache"/>
             </split>
             <log id="_log4" loggingLevel="INFO" message="Inserted to collection ${header.cid} multiple documents."/>
-            <setBody>
+            <setBody id="_setBody2">
                 <simple>{"status" : "ok"}</simple>
             </setBody>
-            <unmarshal ref="json"/>
+            <unmarshal id="_unmarshal2" ref="json"/>
         </route>
         <!-- delete -->
         <route id="Delete from cache">
