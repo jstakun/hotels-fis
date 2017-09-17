@@ -96,7 +96,7 @@
                 <responseMessage message="Hotels list that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
-                	<to uri="direct:getFromCacheUnlimited"/>
+                    <to uri="direct:getFromCacheUnlimited"/>
                     <filter>
                         <simple>${body} == null</simple>
                         <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
@@ -129,8 +129,7 @@
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="string" defaultValue=""
-                    description="Sort by property"
-                    name="limit" type="path"/>
+                    description="Sort by property" name="limit" type="path"/>
                 <param dataType="integer" defaultValue="-1"
                     description="Sort order: 1 for asc, -1 for desc"
                     name="limit" type="path"/>
@@ -140,14 +139,14 @@
                 <responseMessage message="Hotels list that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
-                	<to uri="direct:getFromCacheSorted"/>
-                	<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                    <to uri="direct:getFromCacheSorted"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
-                       </setHeader>
+                        </setHeader>
                     </filter>
-                </route>	
+                </route>
             </get>
             <get uri="/v1/count/{cid}">
                 <description>Count all hotels</description>
@@ -176,14 +175,14 @@
                 <responseMessage message="Hotels list that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
-                	<to uri="direct:getByQueryFromCacheUnlimited"/>
+                    <to uri="direct:getByQueryFromCacheUnlimited"/>
                     <filter>
                         <simple>${body} == null</simple>
                         <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
                         </setHeader>
                     </filter>
-                </route>	
+                </route>
             </get>
             <get uri="/v1/one/{cid}/{property}/{value}">
                 <description>Retrieve one hotel data by property value</description>
@@ -196,14 +195,14 @@
                 <responseMessage message="Hotel that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
-                	<to uri="direct:getByPropertyFromCache"/>
+                    <to uri="direct:getByPropertyFromCache"/>
                     <filter>
                         <simple>${body} == null</simple>
                         <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
                         </setHeader>
                     </filter>
-                </route>	
+                </route>
             </get>
             <get uri="/v1/getById/{cid}/{id}">
                 <description>Retrieve hotel data by id</description>
@@ -214,14 +213,14 @@
                 <responseMessage message="Hotel that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
-                	<to uri="direct:getByIdFromCache"/>
-                	<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                    <to uri="direct:getByIdFromCache"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
-                       </setHeader>
+                        </setHeader>
                     </filter>
-                </route>	
+                </route>
             </get>
             <get uri="/v1/cache/{cid}/{property}/{value}/{limit}">
                 <description>Retrieve hotels data by property value with limit</description>
@@ -233,18 +232,18 @@
                     description="Property value" name="value" type="path"/>
                 <param dataType="integer" defaultValue="10"
                     description="Hotels data limit to return"
-                    name="limit" type="path"/>    
+                    name="limit" type="path"/>
                 <responseMessage message="Hotel that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
-                	<to uri="direct:getByQueryFromCache"/>
+                    <to uri="direct:getByQueryFromCache"/>
                     <filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
-                       </setHeader>
+                        </setHeader>
                     </filter>
-                </route>	
+                </route>
             </get>
             <get uri="/v1/cache/{cid}/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve hotels data in distance from coordinate with limit</description>
@@ -255,20 +254,19 @@
                 <param dataType="number" defaultValue="20.95"
                     description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
-                    description="Distance in meters"
-                    name="distance" type="path"/>
+                    description="Distance in meters" name="distance" type="path"/>
                 <param dataType="integer" defaultValue="10"
                     description="Hotels data limit to return"
                     name="limit" type="path"/>
                 <responseMessage message="Hotels that was found"/>
                 <responseMessage code="404" message="No response received"/>
-                <route>        
-                	<to uri="direct:getNearbyFromCache"/>
-                	<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                <route>
+                    <to uri="direct:getNearbyFromCache"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
-                       </setHeader>
+                        </setHeader>
                     </filter>
                 </route>
             </get>
@@ -281,22 +279,18 @@
                 <param dataType="number" defaultValue="20.95"
                     description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
-                    description="Distance in meters"
-                    name="distance" type="path"/>
+                    description="Distance in meters" name="distance" type="path"/>
                 <param dataType="integer" defaultValue="10"
                     description="Hotels data limit to return"
                     name="limit" type="path"/>
-                <responseMessage message="Hotels that was found"/>
-                <responseMessage code="404" message="No response received"/>
-                <route>        
-                	<to uri="seda:getNearbyFromCache?waitForTaskToComplete=Never"/>
-                	<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
-                            <constant>404</constant>
-                       </setHeader>
-                    </filter>
-                </route>	
+                <responseMessage message="Operation status"/>
+                <route>
+                    <to uri="seda:getNearbyFromCache?waitForTaskToComplete=Never"/>
+                    <setBody>
+                		<simple>{"status" : "ok"}</simple>
+            		</setBody>
+            		<unmarshal ref="json"/>
+                </route>
             </get>
             <get uri="/v1/cache/{cid}/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve cheapest hotels data in distance from coordinate with limit</description>
@@ -307,22 +301,21 @@
                 <param dataType="number" defaultValue="20.95"
                     description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
-                    description="Distance in meters"
-                    name="distance" type="path"/>
+                    description="Distance in meters" name="distance" type="path"/>
                 <param dataType="integer" defaultValue="10"
                     description="Hotels data limit to return"
                     name="limit" type="path"/>
                 <responseMessage message="Hotels that was found"/>
                 <responseMessage code="404" message="No response received"/>
-                <route>        
-                	<to uri="direct:getCheapestNearbyFromCache"/>
-                	<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                <route>
+                    <to uri="direct:getCheapestNearbyFromCache"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
-                       </setHeader>
+                        </setHeader>
                     </filter>
-                </route>	
+                </route>
             </get>
             <get uri="/v1/cache/{cid}/async/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve cheapest hotels data in distance from coordinate with limit asynchronous</description>
@@ -333,21 +326,17 @@
                 <param dataType="number" defaultValue="20.95"
                     description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
-                    description="Distance in meters"
-                    name="distance" type="path"/>
+                    description="Distance in meters" name="distance" type="path"/>
                 <param dataType="integer" defaultValue="10"
                     description="Hotels data limit to return"
                     name="limit" type="path"/>
-                <responseMessage message="Hotels that was found"/>
-                <responseMessage code="404" message="No response received"/>
-                <route>        
-                	<to uri="seda:getCheapestNearbyFromCache?waitForTaskToComplete=Never"/>
-                	<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
-                            <constant>404</constant>
-                       </setHeader>
-                    </filter>
+                <responseMessage message="Operation status"/>
+                <route>
+                    <to uri="seda:getCheapestNearbyFromCache?waitForTaskToComplete=Never"/>
+                    <setBody>
+                		<simple>{"status" : "ok"}</simple>
+            		</setBody>
+            		<unmarshal ref="json"/>
                 </route>
             </get>
             <get uri="/v1/cache/{cid}/stars/nearby/{lat}/{lng}/{distance}/{limit}">
@@ -359,20 +348,19 @@
                 <param dataType="number" defaultValue="20.95"
                     description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
-                    description="Distance in meters"
-                    name="distance" type="path"/>
+                    description="Distance in meters" name="distance" type="path"/>
                 <param dataType="integer" defaultValue="10"
                     description="Hotels data limit to return"
                     name="limit" type="path"/>
                 <responseMessage message="Hotels that was found"/>
                 <responseMessage code="404" message="No response received"/>
-                <route>        
-               		<to uri="direct:getStarsNearbyFromCache"/>
-               		<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                <route>
+                    <to uri="direct:getStarsNearbyFromCache"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
-                       </setHeader>
+                        </setHeader>
                     </filter>
                 </route>
             </get>
@@ -385,24 +373,20 @@
                 <param dataType="number" defaultValue="20.95"
                     description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
-                    description="Distance in meters"
-                    name="distance" type="path"/>
+                    description="Distance in meters" name="distance" type="path"/>
                 <param dataType="integer" defaultValue="10"
                     description="Hotels data limit to return"
                     name="limit" type="path"/>
-                <responseMessage message="Hotels that was found"/>
-                <responseMessage code="404" message="No response received"/>
-                <route>        
-                	<to uri="seda:getStarsNearbyFromCache?waitForTaskToComplete=Never"/>
-                	<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
-                            <constant>404</constant>
-                       </setHeader>
-                    </filter>
+                <responseMessage message="Operation status"/>
+                <route>
+                    <to uri="seda:getStarsNearbyFromCache?waitForTaskToComplete=Never"/>
+                    <setBody>
+                		<simple>{"status" : "ok"}</simple>
+            		</setBody>
+            		<unmarshal ref="json"/>
                 </route>
             </get>
-            <get uri="/v1/count/{cid}/nearby/{lat}/{lng}/{distance}" produces="text/plain">
+            <get produces="text/plain" uri="/v1/count/{cid}/nearby/{lat}/{lng}/{distance}">
                 <description>Count hotels in distance from coordinate</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -411,35 +395,34 @@
                 <param dataType="number" defaultValue="20.95"
                     description="Longitude" name="lng" type="path"/>
                 <param dataType="integer" defaultValue="10000"
-                    description="Distance in meters"
-                    name="distance" type="path"/>
+                    description="Distance in meters" name="distance" type="path"/>
                 <responseMessage message="Hotels that was found"/>
                 <responseMessage code="404" message="No response received"/>
-                <route>        
-                	<to uri="direct:getNearbyFromCacheCount"/>
-                	<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                <route>
+                    <to uri="direct:getNearbyFromCacheCount"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
-                       </setHeader>
+                        </setHeader>
                     </filter>
-                </route>	
+                </route>
             </get>
-            <post uri="/v1/cache/{cid}">
-                <description>Save hotels data</description>
+            <post uri="/v1/cache/{cid}" produces="text/plain">
+                <description>Save hotel data</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="string" defaultValue=""
-                    description="Hotel data to save" name="data" type="body"/>    
+                    description="Hotel data to save" name="data" type="body"/>
                 <responseMessage message="Hotels that was found"/>
                 <responseMessage code="404" message="No response received"/>
-                <route>        
-                	<to uri="direct:putToCache"/>
-                	<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                <route>
+                    <to uri="direct:putToCache"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
-                       </setHeader>
+                        </setHeader>
                     </filter>
                 </route>
             </post>
@@ -448,20 +431,20 @@
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="string" defaultValue=""
-                    description="Hotels data to save" name="data" type="body"/>    
+                    description="Hotels data to save" name="data" type="body"/>
                 <responseMessage message="Hotels that was found"/>
                 <responseMessage code="404" message="No response received"/>
-                <route>        
-                	<to uri="direct:putToCacheMulti"/>
-                	<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                <route>
+                    <to uri="direct:putToCacheMulti"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
-                       </setHeader>
+                        </setHeader>
                     </filter>
                 </route>
             </post>
-            <delete uri="/v1/cache/{cid}/{property}/{value}" produces="text/plain">
+            <delete produces="text/plain" uri="/v1/cache/{cid}/{property}/{value}">
                 <description>Delete hotels data by property value</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -472,12 +455,12 @@
                 <responseMessage message="Hotels list that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
-                	<to uri="direct:deleteFromCache"/>
-                	<filter>
-                       <simple>${body} == null</simple>
-                       <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                    <to uri="direct:deleteFromCache"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
                             <constant>404</constant>
-                       </setHeader>
+                        </setHeader>
                     </filter>
                 </route>
             </delete>
@@ -511,7 +494,7 @@
                 <to id="_to1" uri="direct:putToCache"/>
             </split>
             <log id="_log4" loggingLevel="INFO" message="Inserted to collection ${header.cid} multiple documents."/>
-            <setBody id="_setBody2">
+            <setBody>
                 <simple>{"status" : "ok"}</simple>
             </setBody>
             <unmarshal ref="json"/>
