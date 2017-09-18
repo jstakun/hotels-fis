@@ -498,13 +498,19 @@
         <route id="Put to cache multiple records">
             <from id="_from2" uri="direct:putToCacheMulti"/>
             <log id="_log3" loggingLevel="INFO" message="Putting to cache ${header.cid} multiple documents..."/>
+            <setHeader headerName="count">
+                 <simple>0</simple>
+            </setHeader>
             <split id="_split1" parallelProcessing="true">
                 <simple>${body}</simple>
                 <to id="_to1" uri="direct:putToCache"/>
+                <setHeader headerName="count">
+                    <simple>${exchangeProperty.CamelSplitIndex}</simple>
+                </setHeader>
             </split>
-            <log id="_log4" loggingLevel="INFO" message="Inserted to collection ${header.cid} multiple documents."/>
+            <log id="_log4" loggingLevel="INFO" message="Inserted to collection ${header.cid} ${header.count} documents."/>
             <setBody id="_setBody2">
-                <simple>{"status" : "ok", "count": ${header.CamelSplitSize}}</simple>
+                <simple>{"count": ${header.count}}</simple>
             </setBody>
             <unmarshal id="_unmarshal2" ref="json"/>
         </route>
