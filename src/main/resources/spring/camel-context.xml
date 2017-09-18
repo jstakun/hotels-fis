@@ -419,12 +419,11 @@
                     </filter>
                 </route>
             </get>
-            <post produces="text/plain" uri="/v1/cache/{cid}">
+            <post produces="text/plain"
+                type="net.gmsworld.server.camel.Feature" uri="/v1/cache/{cid}">
                 <description>Save hotel data</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
-                <!--param dataType="string" defaultValue=""
-                    description="Hotel data to save" name="body" type="body"/-->
                 <responseMessage message="Hotels that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
@@ -437,12 +436,10 @@
                     </filter>
                 </route>
             </post>
-            <post uri="/v1/cache/multi/{cid}">
+            <post type="net.gmsworld.server.camel.Feature[]" uri="/v1/cache/multi/{cid}">
                 <description>Save multiple hotels data</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
-                <!--param dataType="string" defaultValue=""
-                    description="Hotels data to save" name="body" type="body"/-->
                 <responseMessage message="Hotels that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
@@ -481,7 +478,7 @@
             <from id="_from1" uri="direct:putToCache"/>
             <doTry id="_doTry1">
                 <log id="_log1" loggingLevel="INFO" message="Putting to cache ${header.cid} document..."/>
-                <convertBodyTo id="_convertBodyTo2" type="com.mongodb.DBObject"/>
+                <marshal ref="json"/>
                 <toD id="_toD2" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=save"/>
                 <setBody id="_setBody1">
                     <header>CamelMongoOid</header>
@@ -499,7 +496,6 @@
         <route id="Put to cache multiple records">
             <from id="_from2" uri="direct:putToCacheMulti"/>
             <log id="_log3" loggingLevel="INFO" message="Putting to cache ${header.cid} multiple documents..."/>
-            <marshal id="_marshal1" ref="json"/>
             <split id="_split1" parallelProcessing="true">
                 <method>net.gmsworld.server.camel.JsonArraySplitter</method>
                 <to id="_to1" uri="direct:putToCache"/>
