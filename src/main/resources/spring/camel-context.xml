@@ -55,7 +55,7 @@
         accessDecisionManager="accessDecisionManager"
         authenticationManager="authenticationManager" id="admin" xmlns="http://camel.apache.org/schema/spring-security"/>
     <authorizationPolicy access="ROLE_USER" id="user" xmlns="http://camel.apache.org/schema/spring-security"/>
-    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
+    <camelContext id="hotels" xmlns="http://camel.apache.org/schema/spring">
         <propertyPlaceholder id="properties" location="classpath:/config.properties"/>
         <dataFormats>
             <json id="json" library="Jackson"/>
@@ -88,10 +88,10 @@
             <apiProperty key="host" value="openapi-hotels.b9ad.pro-us-east-1.openshiftapps.com"/>
             <corsHeaders key="Access-Control-Allow-Headers" value="Authorization, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers"/>
         </restConfiguration>
-        <rest>
+        <rest id="production">
             <get uri="/v1/cache/{cid}">
                 <description>Retrieve all hotels data</description>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
                 <responseMessage message="Hotels list that was found"/>
                 <responseMessage code="404" message="No response received"/>
@@ -107,7 +107,7 @@
             </get>
             <get uri="/v1/cache/{cid}/{limit}">
                 <description>Retrieve hotels data with limit</description>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="integer" defaultValue="10"
                     description="Hotels data to return limit"
@@ -124,38 +124,9 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/{sortBy}/{sortOrder}/{limit}">
-                <description>Retrieve hotels data with limit sorted</description>
-                <param dataType="string" defaultValue="hotels"
-                    description="Hotels collection name" name="cid" type="path"/>
-                <param dataType="string" defaultValue=""
-                    description="Sort by property" name="sortBy" type="path"/>
-                <param dataType="integer" defaultValue="-1"
-                    description="Sort order: 1 for asc, -1 for desc"
-                    name="sortOrder" type="path">
-                    <allowableValues>
-                        <value>1</value>
-                        <value>-1</value>
-                    </allowableValues>
-                </param>
-                <param dataType="integer" defaultValue="10"
-                    description="Hotels data limit to return"
-                    name="limit" type="path"/>
-                <responseMessage message="Hotels list that was found"/>
-                <responseMessage code="404" message="No response received"/>
-                <route>
-                    <to uri="direct:getFromCacheSorted"/>
-                    <filter>
-                        <simple>${body} == null</simple>
-                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
-                            <constant>404</constant>
-                        </setHeader>
-                    </filter>
-                </route>
-            </get>
             <get uri="/v1/count/{cid}">
                 <description>Count all hotels</description>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
                 <responseMessage message="All hotels count"/>
                 <responseMessage code="404" message="No response received"/>
@@ -169,33 +140,13 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/{property}/{value}">
-                <description>Retrieve hotels data by property value</description>
-                <param dataType="string" defaultValue="hotels"
-                    description="Hotels collection name" name="cid" type="path"/>
-                <param dataType="string" defaultValue="_id"
-                    description="Property name" name="property" type="path"/>
-                <param dataType="string" defaultValue="1000039"
-                    description="Property value" name="value" type="path"/>
-                <responseMessage message="Hotels list that was found"/>
-                <responseMessage code="404" message="No response received"/>
-                <route>
-                    <to uri="direct:getByQueryFromCacheUnlimited"/>
-                    <filter>
-                        <simple>${body} == null</simple>
-                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
-                            <constant>404</constant>
-                        </setHeader>
-                    </filter>
-                </route>
-            </get>
             <get uri="/v1/one/{cid}/{property}/{value}">
                 <description>Retrieve one hotel data by property value</description>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="string" defaultValue="_id"
                     description="Property name" name="property" type="path"/>
-                <param dataType="string" defaultValue="1000039"
+                <param dataType="string" defaultValue="1"
                     description="Property value" name="value" type="path"/>
                 <responseMessage message="Hotel that was found"/>
                 <responseMessage code="404" message="No response received"/>
@@ -211,37 +162,14 @@
             </get>
             <get uri="/v1/getById/{cid}/{id}">
                 <description>Retrieve hotel data by id</description>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
-                <param dataType="string" defaultValue="1000003"
+                <param dataType="string" defaultValue="1"
                     description="Hotel Id" name="id" type="path"/>
                 <responseMessage message="Hotel that was found"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
                     <to uri="direct:getByIdFromCache"/>
-                    <filter>
-                        <simple>${body} == null</simple>
-                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
-                            <constant>404</constant>
-                        </setHeader>
-                    </filter>
-                </route>
-            </get>
-            <get uri="/v1/cache/{cid}/{property}/{value}/{limit}">
-                <description>Retrieve hotels data by property value with limit</description>
-                <param dataType="string" defaultValue="hotels"
-                    description="Hotels collection name" name="cid" type="path"/>
-                <param dataType="string" defaultValue="_id"
-                    description="Property name" name="property" type="path"/>
-                <param dataType="string" defaultValue="1000039"
-                    description="Property value" name="value" type="path"/>
-                <param dataType="integer" defaultValue="10"
-                    description="Hotels data limit to return"
-                    name="limit" type="path"/>
-                <responseMessage message="Hotel that was found"/>
-                <responseMessage code="404" message="No response received"/>
-                <route>
-                    <to uri="direct:getByQueryFromCache"/>
                     <filter>
                         <simple>${body} == null</simple>
                         <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
@@ -454,14 +382,15 @@
             </post>
             <delete produces="text/plain" uri="/v1/cache/{cid}/{property}/{value}">
                 <description>Delete hotels data by property value</description>
-                <param dataType="string" defaultValue="hotels"
+                <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
                 <param dataType="string" defaultValue="_id"
                     description="Property name" name="property" type="path"/>
-                <param dataType="string" defaultValue="1000039"
+                <param dataType="string" defaultValue="1"
                     description="Property value" name="value" type="path"/>
-                <responseMessage message="Hotels list that was found"/>
+                <responseMessage message="Deleted Hotels count"/>
                 <responseMessage code="404" message="No response received"/>
+                <responseMessage code="406" message="Not allowed"/>
                 <route>
                     <to uri="direct:deleteFromCache"/>
                     <filter>
@@ -472,13 +401,86 @@
                     </filter>
                 </route>
             </delete>
+            <!-- testing -->
+        	<get uri="/v1/cache/{cid}/{property}/{value}/{limit}">
+                <description>Retrieve hotels data by property value with limit</description>
+                <param dataType="string" defaultValue="test"
+                    description="Hotels collection name" name="cid" type="path"/>
+                <param dataType="string" defaultValue="_id"
+                    description="Property name" name="property" type="path"/>
+                <param dataType="string" defaultValue="1"
+                    description="Property value" name="value" type="path"/>
+                <param dataType="integer" defaultValue="10"
+                    description="Hotels data limit to return"
+                    name="limit" type="path"/>
+                <responseMessage message="Hotel that was found"/>
+                <responseMessage code="404" message="No response received"/>
+                <route>
+                    <to uri="direct:getByQueryFromCache"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                            <constant>404</constant>
+                        </setHeader>
+                    </filter>
+                </route>
+            </get>
+            <get uri="/v1/cache/{cid}/{property}/{value}">
+                <description>Retrieve hotels data by property value</description>
+                <param dataType="string" defaultValue="test"
+                    description="Hotels collection name" name="cid" type="path"/>
+                <param dataType="string" defaultValue="_id"
+                    description="Property name" name="property" type="path"/>
+                <param dataType="string" defaultValue="1"
+                    description="Property value" name="value" type="path"/>
+                <responseMessage message="Hotels list that was found"/>
+                <responseMessage code="404" message="No response received"/>
+                <route>
+                    <to uri="direct:getByQueryFromCacheUnlimited"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                            <constant>404</constant>
+                        </setHeader>
+                    </filter>
+                </route>
+            </get>
+            <get uri="/v1/cache/{cid}/{sortBy}/{sortOrder}/{limit}">
+                <description>Retrieve hotels data with limit sorted</description>
+                <param dataType="string" defaultValue="test"
+                    description="Hotels collection name" name="cid" type="path"/>
+                <param dataType="string" defaultValue="_id"
+                    description="Sort by property" name="sortBy" type="path"/>
+                <param dataType="integer" defaultValue="-1"
+                    description="Sort order: 1 for asc, -1 for desc"
+                    name="sortOrder" type="path">
+                    <allowableValues>
+                        <value>1</value>
+                        <value>-1</value>
+                    </allowableValues>
+                </param>
+                <param dataType="integer" defaultValue="10"
+                    description="Hotels data limit to return"
+                    name="limit" type="path"/>
+                <responseMessage message="Hotels list that was found"/>
+                <responseMessage code="404" message="No response received"/>
+                <route>
+                    <to uri="direct:getFromCacheSorted"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                            <constant>404</constant>
+                        </setHeader>
+                    </filter>
+                </route>
+            </get>
         </rest>
         <!-- insert -->
         <route id="Put to cache">
             <from id="_from1" uri="direct:putToCache"/>
             <doTry id="_doTry1">
                 <log id="_log1" loggingLevel="INFO" message="Putting to cache ${header.cid} document..."/>
-                <convertBodyTo type="com.mongodb.DBObject"/>
+                <convertBodyTo id="_convertBodyTo2" type="com.mongodb.DBObject"/>
                 <toD id="_toD2" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=save"/>
                 <setBody id="_setBody1">
                     <header>CamelMongoOid</header>
@@ -496,13 +498,13 @@
         <route id="Put to cache multiple records">
             <from id="_from2" uri="direct:putToCacheMulti"/>
             <log id="_log3" loggingLevel="INFO" message="Putting to cache ${header.cid} multiple documents..."/>
-            <split parallelProcessing="true">
-    			<simple>${body}</simple> 
-    			<to id="_to1" uri="direct:putToCache"/>
-    		</split>	
+            <split id="_split1" parallelProcessing="true">
+                <simple>${body}</simple>
+                <to id="_to1" uri="direct:putToCache"/>
+            </split>
             <log id="_log4" loggingLevel="INFO" message="Inserted to collection ${header.cid} multiple documents."/>
             <setBody id="_setBody2">
-                <simple>{"status" : "ok"}</simple>
+                <simple>{"status" : "ok", "count": ${header.CamelSplitSize}}</simple>
             </setBody>
             <unmarshal id="_unmarshal2" ref="json"/>
         </route>
@@ -516,7 +518,7 @@
             <recipientList id="_recipientList2">
                 <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=remove</simple>
             </recipientList>
-            <setBody id="_setBody4">
+            <setBody>
                 <header>CamelMongoDbRecordsAffected</header>
             </setBody>
         </route>
