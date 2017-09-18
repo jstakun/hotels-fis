@@ -213,7 +213,7 @@
                 <description>Retrieve hotel data by id</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
-                <param dataType="string" defaultValue=""
+                <param dataType="string" defaultValue="1000003"
                     description="Hotel Id" name="id" type="path"/>
                 <responseMessage message="Hotel that was found"/>
                 <responseMessage code="404" message="No response received"/>
@@ -294,6 +294,9 @@
                     <setBody>
                         <simple>{"status": "ok"}</simple>
                     </setBody>
+                    <setHeader headerName="Exchange.CONTENT_TYPE">
+                        <constant>application/json</constant>
+                    </setHeader>
                 </route>
             </get>
             <get uri="/v1/cache/{cid}/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
@@ -321,7 +324,7 @@
                     </filter>
                 </route>
             </get>
-            <get produces="application/json" uri="/v1/cache/{cid}/async/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
+            <get uri="/v1/cache/{cid}/async/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve cheapest hotels data in distance from coordinate with limit asynchronous</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -340,6 +343,9 @@
                     <setBody>
                         <simple>{"status": "ok"}</simple>
                     </setBody>
+                    <setHeader headerName="Exchange.CONTENT_TYPE">
+                        <constant>application/json</constant>
+                    </setHeader>
                 </route>
             </get>
             <get uri="/v1/cache/{cid}/stars/nearby/{lat}/{lng}/{distance}/{limit}">
@@ -367,7 +373,7 @@
                     </filter>
                 </route>
             </get>
-            <get produces="application/json" uri="/v1/cache/{cid}/async/stars/nearby/{lat}/{lng}/{distance}/{limit}">
+            <get uri="/v1/cache/{cid}/async/stars/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve hotels data by star rating in distance from coordinate with limit asynchronous</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -386,6 +392,9 @@
                     <setBody>
                         <simple>{"status": "ok"}</simple>
                     </setBody>
+                    <setHeader headerName="Exchange.CONTENT_TYPE">
+                        <constant>application/json</constant>
+                    </setHeader>
                 </route>
             </get>
             <get produces="text/plain" uri="/v1/count/{cid}/nearby/{lat}/{lng}/{distance}">
@@ -612,9 +621,9 @@
         </route>
         <route id="Get one by id from cache">
             <from id="_from11" uri="direct:getByIdFromCache"/>
-            <log id="_log11" loggingLevel="INFO" message="Get from cache ${header.cid} object with id : ${header.value} by user ${header.authorization}"/>
+            <log id="_log11" loggingLevel="INFO" message="Get from cache ${header.cid} object with id : ${header.id} by user ${header.authorization}"/>
             <setBody id="_setBody7">
-                <simple>"${header.value}"</simple>
+                <simple>"${header.id}"</simple>
             </setBody>
             <toD id="_toD1" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findById"/>
         </route>
