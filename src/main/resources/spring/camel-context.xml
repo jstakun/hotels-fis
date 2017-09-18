@@ -478,7 +478,7 @@
             <from id="_from1" uri="direct:putToCache"/>
             <doTry id="_doTry1">
                 <log id="_log1" loggingLevel="INFO" message="Putting to cache ${header.cid} document..."/>
-                <marshal ref="json"/>
+                <convertBodyTo type="com.mongodb.DBObject"/>
                 <toD id="_toD2" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=save"/>
                 <setBody id="_setBody1">
                     <header>CamelMongoOid</header>
@@ -496,10 +496,10 @@
         <route id="Put to cache multiple records">
             <from id="_from2" uri="direct:putToCacheMulti"/>
             <log id="_log3" loggingLevel="INFO" message="Putting to cache ${header.cid} multiple documents..."/>
-            <split id="_split1" parallelProcessing="true">
-                <method>net.gmsworld.server.camel.JsonArraySplitter</method>
-                <to id="_to1" uri="direct:putToCache"/>
-            </split>
+            <split parallelProcessing="true">
+    			<simple>${body}</simple> 
+    			<to id="_to1" uri="direct:putToCache"/>
+    		</split>	
             <log id="_log4" loggingLevel="INFO" message="Inserted to collection ${header.cid} multiple documents."/>
             <setBody id="_setBody2">
                 <simple>{"status" : "ok"}</simple>
