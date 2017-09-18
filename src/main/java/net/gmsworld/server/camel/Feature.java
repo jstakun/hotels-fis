@@ -11,6 +11,6 @@ public class Feature {
 	
 	public Map<String, Object> properties = new HashMap<String, Object>();
 	
-	public Object geometry;
+	public Geometry geometry;
     
 }
