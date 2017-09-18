@@ -623,7 +623,7 @@
             <from id="_from11" uri="direct:getByIdFromCache"/>
             <log id="_log11" loggingLevel="INFO" message="Get from cache ${header.cid} object with id : ${header.id} by user ${header.authorization}"/>
             <setBody id="_setBody7">
-                <simple>"${header.id}"</simple>
+                <simple>${header.id}</simple>
             </setBody>
             <toD id="_toD1" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findById"/>
         </route>
