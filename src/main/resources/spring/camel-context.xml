@@ -518,6 +518,7 @@
             <setBody id="_setBody3">
                 <simple>{"${header.property}" : "${header.value}"}</simple>
             </setBody>
+            <convertBodyTo type="com.mongodb.DBObject"/>
             <recipientList id="_recipientList2">
                 <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=remove</simple>
             </recipientList>
