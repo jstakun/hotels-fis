@@ -17,6 +17,8 @@
             </bean>
         </constructor-arg>
     </bean>
+    <!-- Aggregate Strategy bean -->
+    <bean id="countAggregationStrategy" class="net.gmsworld.server.camel.CountAggregateStrategy"/>
     <!-- rest servlet -->
     <bean
         class="org.apache.camel.component.servlet.CamelHttpTransportServlet" id="camelHttpTransportServlet"/>
@@ -55,7 +57,7 @@
         accessDecisionManager="accessDecisionManager"
         authenticationManager="authenticationManager" id="admin" xmlns="http://camel.apache.org/schema/spring-security"/>
     <authorizationPolicy access="ROLE_USER" id="user" xmlns="http://camel.apache.org/schema/spring-security"/>
-    <camelContext id="hotels" xmlns="http://camel.apache.org/schema/spring">
+    <camelContext id="hotels-api" xmlns="http://camel.apache.org/schema/spring">
         <propertyPlaceholder id="properties" location="classpath:/config.properties"/>
         <dataFormats>
             <json id="json" library="Jackson"/>
@@ -85,7 +87,7 @@
             <apiProperty key="api.title" value="Hotels API"/>
             <apiProperty key="api.version" value="1.0.0"/>
             <apiProperty key="api.contact.email" value="jstakun@redhat.com"/>
-            <apiProperty key="host" value="openapi-hotels.b9ad.pro-us-east-1.openshiftapps.com"/>
+            <apiProperty key="host" value="api-hotels.a3c1.starter-us-west-1.openshiftapps.com"/>
             <corsHeaders key="Access-Control-Allow-Headers" value="Authorization, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers"/>
         </restConfiguration>
         <rest id="production">
@@ -402,7 +404,7 @@
                 </route>
             </delete>
             <!-- testing -->
-        	<get uri="/v1/cache/{cid}/{property}/{value}/{limit}">
+            <get uri="/v1/cache/{cid}/{property}/{value}/{limit}">
                 <description>Retrieve hotels data by property value with limit</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -445,7 +447,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/{sortBy}/{sortOrder}/{limit}">
+            <get uri="/v1/cache/{cid}/sort/{sortBy}/{sortOrder}/{limit}">
                 <description>Retrieve hotels data with limit sorted</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -498,19 +500,14 @@
         <route id="Put to cache multiple records">
             <from id="_from2" uri="direct:putToCacheMulti"/>
             <log id="_log3" loggingLevel="INFO" message="Putting to cache ${header.cid} multiple documents..."/>
-            <setHeader headerName="count">
-                 <simple>0</simple>
-            </setHeader>
-            <split id="_split1" parallelProcessing="true">
-                <simple>${body}</simple>
+            <split id="_split1" parallelProcessing="true" strategyRef="countAggregationStrategy">
+                <simple>body</simple>
                 <to id="_to1" uri="direct:putToCache"/>
-                <setHeader headerName="count">
-                    <simple>${exchangeProperty.CamelSplitIndex}</simple>
-                </setHeader>
             </split>
-            <log id="_log4" loggingLevel="INFO" message="Inserted to collection ${header.cid} ${header.count} documents."/>
+            <to uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/>
+            <log id="_log4" loggingLevel="INFO" message="Inserted to collection ${header.cid} ${property.counter} documents."/>
             <setBody id="_setBody2">
-                <simple>{"count": ${header.count}}</simple>
+                <simple>{"count": ${property.counter}}</simple>
             </setBody>
             <unmarshal id="_unmarshal2" ref="json"/>
         </route>
@@ -524,7 +521,9 @@
             <recipientList id="_recipientList2">
                 <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=remove</simple>
             </recipientList>
-            <setBody>
+            <to uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/>
+            <log id="_log5" loggingLevel="INFO" message="Deleted from cache ${header.cid} ${header.CamelMongoDbRecordsAffected} objects matching ${header.property} : ${header.value}"/>
+            <setBody id="_setBody4">
                 <header>CamelMongoDbRecordsAffected</header>
             </setBody>
         </route>
@@ -571,9 +570,8 @@
             <setHeader headerName="CamelMongoDbBatchSize" id="_setHeader7">
                 <constant>{{batchLimit}}</constant>
             </setHeader>
-            <recipientList id="_recipientList4">
-                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
-            </recipientList>
+            <to id="_to8" uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/>
+            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
         </route>
         <route id="Get from cache count">
             <from id="_from7" uri="direct:getFromCacheCount"/>
@@ -602,12 +600,14 @@
             <setBody id="_setBody5">
                 <simple>{"${header.property}" : "${header.value}"}</simple>
             </setBody>
+            <convertBodyTo type="com.mongodb.DBObject"/>
             <setHeader headerName="CamelMongoDbSortBy" id="_setHeader9">
                 <simple>{"_id" : -1}</simple>
             </setHeader>
             <setHeader headerName="CamelMongoDbLimit" id="_setHeader10">
                 <simple>${header.limit}</simple>
             </setHeader>
+            <to uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/>
             <recipientList id="_recipientList6">
                 <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
             </recipientList>
