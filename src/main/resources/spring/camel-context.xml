@@ -504,7 +504,6 @@
                 <simple>body</simple>
                 <to id="_to1" uri="direct:putToCache"/>
             </split>
-            <to uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/>
             <log id="_log4" loggingLevel="INFO" message="Inserted to collection ${header.cid} ${property.counter} documents."/>
             <setBody id="_setBody2">
                 <simple>{"count": ${property.counter}}</simple>
@@ -522,11 +521,16 @@
             <recipientList id="_recipientList2">
                 <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=remove</simple>
             </recipientList>
-            <to uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/>
             <log id="_log5" loggingLevel="INFO" message="Deleted from cache ${header.cid} ${header.CamelMongoDbRecordsAffected} objects matching ${header.property} : ${header.value}"/>
             <setBody id="_setBody4">
                 <header>CamelMongoDbRecordsAffected</header>
             </setBody>
+            <filter>
+               <simple>${body} == null</simple>
+               <setBody>
+               		<constant>Unknown number of records deleted</constant>
+               </setBody>
+            </filter>
         </route>
         <!-- select -->
         <route id="Get from cache unlimited">
@@ -563,7 +567,7 @@
             </validate>
             <log id="_log7" loggingLevel="INFO" message="Get all from cache ${header.cid} with limit ${header.limit} sorted by ${header.sortBy}: ${header.sortOrder}  by user ${header.authorization}"/>
             <setHeader headerName="CamelMongoDbSortBy" id="_setHeader5">
-                <simple>{"${header.sortBy}" : ${header.sortOrder}}</simple>
+                <simple resultType="com.mongodb.DBObject">{"${header.sortBy}" : ${header.sortOrder}}</simple>
             </setHeader>
             <setHeader headerName="CamelMongoDbLimit" id="_setHeader6">
                 <simple>${header.limit}</simple>
@@ -571,7 +575,6 @@
             <setHeader headerName="CamelMongoDbBatchSize" id="_setHeader7">
                 <constant>{{batchLimit}}</constant>
             </setHeader>
-            <to id="_to8" uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/>
             <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
         </route>
         <route id="Get from cache count">
@@ -608,7 +611,6 @@
             <setHeader headerName="CamelMongoDbLimit" id="_setHeader10">
                 <simple>${header.limit}</simple>
             </setHeader>
-            <to uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/>
             <recipientList id="_recipientList6">
                 <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
             </recipientList>
