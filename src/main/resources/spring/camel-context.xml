@@ -87,11 +87,23 @@
             <apiProperty key="api.title" value="Hotels API"/>
             <apiProperty key="api.version" value="1.0.0"/>
             <apiProperty key="api.contact.email" value="jstakun@redhat.com"/>
-            <apiProperty key="host" value="api-hotels.a3c1.starter-us-west-1.openshiftapps.com"/>
-            <!--apiProperty key="host" value="openapi-hotels.b9ad.pro-us-east-1.openshiftapps.com"/-->
+            <!--apiProperty key="host" value="api-hotels.a3c1.starter-us-west-1.openshiftapps.com"/-->
+            <apiProperty key="host" value="openapi-hotels.b9ad.pro-us-east-1.openshiftapps.com"/>
             <corsHeaders key="Access-Control-Allow-Headers" value="Authorization, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers"/>
         </restConfiguration>
         <rest id="production">
+            <get uri="/v1/ping">
+                <description>Ping to check if api is up</description>
+                <responseMessage message="Api is up"/>
+                <route>
+                    <setBody>
+                        <simple>{"pong": "ok"}</simple>
+                    </setBody>
+                    <setHeader headerName="Exchange.CONTENT_TYPE">
+                        <constant>application/json</constant>
+                    </setHeader>
+                </route>
+            </get>
             <get uri="/v1/cache/{cid}">
                 <description>Retrieve all hotels data</description>
                 <param dataType="string" defaultValue="test"
@@ -547,7 +559,7 @@
                 <simple>${header.limit} range '1..{{batchLimit}}'</simple>
             </validate>
             <log id="_log6" loggingLevel="INFO" message="Get all from cache ${header.cid} with limit ${header.limit} by user ${header.authorization}"/>
-            <setHeader headerName="CamelMongoDbSortBy">
+            <setHeader headerName="CamelMongoDbSortBy" id="_setHeader2">
                 <!--  descending by _id -->
                 <constant>{"_id" : -1}</constant>
             </setHeader>
@@ -606,7 +618,7 @@
                 <simple>{"${header.property}" : "${header.value}"}</simple>
             </setBody>
             <convertBodyTo id="_convertBodyTo4" type="com.mongodb.DBObject"/>
-            <setHeader headerName="CamelMongoDbSortBy">
+            <setHeader headerName="CamelMongoDbSortBy" id="_setHeader9">
                 <constant>{"_id" : -1}</constant>
             </setHeader>
             <setHeader headerName="CamelMongoDbLimit" id="_setHeader10">
@@ -644,10 +656,10 @@
                 <simple>${header.distance} range '1..{{distanceLimit}}'</simple>
             </validate>
             <log id="_log12" loggingLevel="INFO" message="Get from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} with limit ${header.limit} by user ${header.authorization}"/>
-            <setBody>
+            <setBody id="_setBody8">
                 <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
             </setBody>
-            <convertBodyTo type="com.mongodb.DBObject"/>
+            <convertBodyTo id="_convertBodyTo5" type="com.mongodb.DBObject"/>
             <setHeader headerName="CamelMongoDbLimit" id="_setHeader11">
                 <simple>${header.limit}</simple>
             </setHeader>
@@ -657,7 +669,7 @@
         </route>
         <route id="Get most stars nearby from cache">
             <from id="_from13" uri="direct:getStarsNearbyFromCache"/>
-            <setHeader headerName="CamelMongoDbSortBy">
+            <setHeader headerName="CamelMongoDbSortBy" id="_setHeader12">
                 <simple resultType="com.mongodb.DBObject">{"properties.stars" : -1}</simple>
             </setHeader>
             <to id="_to4" uri="direct:getNearbyFromCache"/>
@@ -685,11 +697,11 @@
             <setBody id="_setBody10">
                 <simple>{ "properties.minrate" : { $gt : 0 },  "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
             </setBody>
-            <convertBodyTo type="com.mongodb.DBObject"/>
+            <convertBodyTo id="_convertBodyTo6" type="com.mongodb.DBObject"/>
             <setHeader headerName="CamelMongoDbLimit" id="_setHeader14">
                 <simple>${header.limit}</simple>
             </setHeader>
-            <setHeader headerName="CamelMongoDbSortBy">
+            <setHeader headerName="CamelMongoDbSortBy" id="_setHeader15">
                 <simple resultType="com.mongodb.DBObject">{"properties.minrate" : 1}</simple>
             </setHeader>
             <recipientList id="_recipientList9">
@@ -713,7 +725,7 @@
             <setBody id="_setBody12">
                 <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
             </setBody>
-            <convertBodyTo type="com.mongodb.DBObject"/>
+            <convertBodyTo id="_convertBodyTo7" type="com.mongodb.DBObject"/>
             <toD id="_toD3" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count"/>
         </route>
         <route id="Get nearby from cache and save">
