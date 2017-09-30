@@ -1,8 +1,10 @@
 package net.gmsworld.server.camel;
 
+import java.util.Collection;
+
 public class Geometry {
 	
-	public final String type = "Point";
+	public String type = null;
 
-	public double[] coordinates = new double[2];
+	public Collection<double[]> coordinates;
 }

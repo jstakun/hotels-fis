@@ -87,8 +87,9 @@
             <apiProperty key="api.title" value="Hotels API"/>
             <apiProperty key="api.version" value="1.0.0"/>
             <apiProperty key="api.contact.email" value="jstakun@redhat.com"/>
-            <!--apiProperty key="host" value="api-hotels.a3c1.starter-us-west-1.openshiftapps.com"/-->
-            <apiProperty key="host" value="openapi-hotels.b9ad.pro-us-east-1.openshiftapps.com"/>
+            <apiProperty key="host" value="api-hotels.a3c1.starter-us-west-1.openshiftapps.com"/>
+            <!--apiProperty key="host" value="openapi-hotels.b9ad.pro-us-east-1.openshiftapps.com"/-->
+            <!--apiProperty key="host" value="fuse:8080"/-->
             <corsHeaders key="Access-Control-Allow-Headers" value="Authorization, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers"/>
         </restConfiguration>
         <rest id="production">
@@ -367,10 +368,26 @@
                 <description>Save hotel data</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
-                <responseMessage message="Hotels that was found"/>
+                <responseMessage message="Hotel id"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
                     <to uri="direct:putToCache"/>
+                    <filter>
+                        <simple>${body} == null</simple>
+                        <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                            <constant>404</constant>
+                        </setHeader>
+                    </filter>
+                </route>
+            </post>
+            <post produces="text/plain" type="net.gmsworld.server.camel.FeatureCollection" uri="/v1/cache/features/{cid}">
+                <description>Save features data</description>
+                <param dataType="string" defaultValue="test"
+                    description="Collection name" name="cid" type="path"/>
+                <responseMessage message="Feature collection id"/>
+                <responseMessage code="404" message="No response received"/>
+                <route>
+                    <to uri="direct:insertToCache"/>
                     <filter>
                         <simple>${body} == null</simple>
                         <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
@@ -383,7 +400,7 @@
                 <description>Save multiple hotels data</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
-                <responseMessage message="Hotels that was found"/>
+                <responseMessage message="Hotels count"/>
                 <responseMessage code="404" message="No response received"/>
                 <route>
                     <to uri="direct:putToCacheMulti"/>
@@ -491,10 +508,11 @@
             </get>
         </rest>
         <!-- insert -->
-        <route id="Put to cache">
+        <route id="Save to cache">
             <from id="_from1" uri="direct:putToCache"/>
             <doTry id="_doTry1">
                 <log id="_log1" loggingLevel="INFO" message="Putting to cache ${header.cid} document..."/>
+                <!--to uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/-->
                 <convertBodyTo id="_convertBodyTo2" type="com.mongodb.DBObject"/>
                 <toD id="_toD2" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=save"/>
                 <setBody id="_setBody1">
@@ -507,6 +525,26 @@
                         <constant>true</constant>
                     </handled>
                     <log id="_log15" loggingLevel="ERROR" message="Operation failed with exception: ${exception.message}"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="Insert to cache">
+            <from uri="direct:insertToCache"/>
+            <doTry>
+                <log loggingLevel="INFO" message="Inserting to cache ${header.cid} document..."/>
+                <!--to uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/-->
+                <convertBodyTo type="com.mongodb.DBObject"/>
+                <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=insert"/>
+                <setBody>
+                    <header>CamelMongoOid</header>
+                </setBody>
+                <log loggingLevel="INFO" message="Inserted to collection ${header.cid} document with id ${header.CamelMongoOid}."/>
+                <doCatch>
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <log loggingLevel="ERROR" message="Operation failed with exception: ${exception.message}"/>
                 </doCatch>
             </doTry>
         </route>
