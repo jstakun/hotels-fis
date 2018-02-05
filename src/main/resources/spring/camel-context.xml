@@ -525,7 +525,7 @@
                     <handled>
                         <constant>true</constant>
                     </handled>
-                    <log loggingLevel="ERROR" message="Operation failed with exception: ${exception.message}"/>
+                    <log id="_log19" loggingLevel="ERROR" message="Operation failed with exception: ${exception.message}"/>
                 </doCatch>
             </doTry>
         </route>
@@ -759,22 +759,22 @@
             <wireTap id="_wireTap2" uri="direct:putToCache"/>
         </route>
         <route id="Get nearby from cache count">
-          	<from id="_from17" uri="direct:getNearbyFromCacheCount"/>
-            <doTry>
-            	<log id="_log14" loggingLevel="INFO" message="Get count from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} by user ${header.authorization}"/>
-            	<setBody id="_setBody12">
-                	<simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
-            	</setBody>
-            	<convertBodyTo id="_convertBodyTo7" type="com.mongodb.DBObject"/>
-            	<toD id="_toD3" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count"/>
+            <from id="_from17" uri="direct:getNearbyFromCacheCount"/>
+            <doTry id="_doTry3">
+                <log id="_log14" loggingLevel="INFO" message="Get count from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} by user ${header.authorization}"/>
+                <setBody id="_setBody12">
+                    <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
+                </setBody>
+                <convertBodyTo id="_convertBodyTo7" type="com.mongodb.DBObject"/>
+                <toD id="_toD3" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count"/>
                 <doCatch id="_doCatch1">
                     <exception>java.lang.Exception</exception>
                     <handled>
                         <constant>true</constant>
                     </handled>
                     <log id="_log15" loggingLevel="ERROR" message="Operation failed with exception: ${exception.message}"/>
-                    <setBody>
-                    	<simple>null</simple>
+                    <setBody id="_setBody17">
+                        <simple>null</simple>
                     </setBody>
                 </doCatch>
             </doTry>

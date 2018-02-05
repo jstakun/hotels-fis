@@ -7,7 +7,7 @@ public class Feature {
 	
 	public final String type = "Feature";
 	
-	public String _id = null;
+	//public String _id = null;
 	
 	public Map<String, Object> properties = new HashMap<String, Object>();
 	
