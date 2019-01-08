@@ -93,7 +93,7 @@
             <corsHeaders key="Access-Control-Allow-Headers" value="Authorization, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers"/>
         </restConfiguration>
         <rest id="production">
-            <get uri="/v1/ping">
+            <get id="get-ee5b0319-500b-47b2-ba53-ba6cafb7c4c8" uri="/v1/ping">
                 <description>Ping to check if api is up</description>
                 <responseMessage message="Api is up"/>
                 <route>
@@ -105,7 +105,7 @@
                     </setHeader>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}">
+            <get id="get-51f11747-9586-4461-a341-ea4c1b38da00" uri="/v1/cache/{cid}">
                 <description>Retrieve all hotels data</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -121,7 +121,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/{limit}">
+            <get id="get-20723a56-043b-4957-b82d-00cffbbe88e7" uri="/v1/cache/{cid}/{limit}">
                 <description>Retrieve hotels data with limit</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -140,7 +140,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/count/{cid}">
+            <get id="get-3c708a28-7920-4a43-affc-5dd4c056644e" uri="/v1/count/{cid}">
                 <description>Count all hotels</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -156,7 +156,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/one/{cid}/{property}/{value}">
+            <get id="get-73f7a895-a261-45ba-9f38-7fcd85f59ad1" uri="/v1/one/{cid}/{property}/{value}">
                 <description>Retrieve one hotel data by property value</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -176,7 +176,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/getById/{cid}/{id}">
+            <get id="get-9ee6b87c-a0d0-40ae-acad-fdd4786cc488" uri="/v1/getById/{cid}/{id}">
                 <description>Retrieve hotel data by id</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -194,7 +194,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/nearby/{lat}/{lng}/{distance}/{limit}">
+            <get id="get-88e10c3f-1009-4f13-ac1c-814265319930" uri="/v1/cache/{cid}/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve hotels data in distance from coordinate with limit</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -219,7 +219,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/async/nearby/{lat}/{lng}/{distance}/{limit}">
+            <get id="get-de707545-54fb-4730-8aeb-2e9064974e3f" uri="/v1/cache/{cid}/async/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve hotels data in distance from coordinate with limit asynchronous</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -243,7 +243,7 @@
                     </setHeader>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
+            <get id="get-09a43dc5-2e10-4370-a756-f5502a467c1c" uri="/v1/cache/{cid}/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve cheapest hotels data in distance from coordinate with limit</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -268,7 +268,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/async/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
+            <get id="get-8bdc6ccb-7518-483e-898b-a26baab4626e" uri="/v1/cache/{cid}/async/cheapest/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve cheapest hotels data in distance from coordinate with limit asynchronous</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -292,7 +292,7 @@
                     </setHeader>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/stars/nearby/{lat}/{lng}/{distance}/{limit}">
+            <get id="get-bab240e6-f5a9-4f10-9fc7-d4bef40a1e00" uri="/v1/cache/{cid}/stars/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve hotels data by star rating in distance from coordinate with limit</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -317,7 +317,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/async/stars/nearby/{lat}/{lng}/{distance}/{limit}">
+            <get id="get-23984050-bb9a-4b05-b5a7-e123ebc853db" uri="/v1/cache/{cid}/async/stars/nearby/{lat}/{lng}/{distance}/{limit}">
                 <description>Retrieve hotels data by star rating in distance from coordinate with limit asynchronous</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -341,7 +341,8 @@
                     </setHeader>
                 </route>
             </get>
-            <get produces="text/plain" uri="/v1/count/{cid}/nearby/{lat}/{lng}/{distance}">
+            <get id="get-2c873378-6bb9-469c-bf36-923185729030"
+                produces="text/plain" uri="/v1/count/{cid}/nearby/{lat}/{lng}/{distance}">
                 <description>Count hotels in distance from coordinate</description>
                 <param dataType="string" defaultValue="hotels"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -363,7 +364,8 @@
                     </filter>
                 </route>
             </get>
-            <post produces="text/plain"
+            <post id="post-03444a28-fa6e-4cd3-ae75-5521025718a8"
+                produces="text/plain"
                 type="net.gmsworld.server.camel.Feature" uri="/v1/cache/{cid}">
                 <description>Save hotel data</description>
                 <param dataType="string" defaultValue="test"
@@ -380,7 +382,8 @@
                     </filter>
                 </route>
             </post>
-            <post produces="text/plain"
+            <post id="post-f75b6cfa-745d-44cd-bc45-e4aba7246fd4"
+                produces="text/plain"
                 type="net.gmsworld.server.camel.FeatureCollection" uri="/v1/cache/features/{cid}">
                 <description>Save features data</description>
                 <param dataType="string" defaultValue="test"
@@ -397,7 +400,8 @@
                     </filter>
                 </route>
             </post>
-            <post type="net.gmsworld.server.camel.Feature[]" uri="/v1/cache/multi/{cid}">
+            <post id="post-bf991790-ab87-4d59-ae34-4fe846cf8f39"
+                type="net.gmsworld.server.camel.Feature[]" uri="/v1/cache/multi/{cid}">
                 <description>Save multiple hotels data</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -413,7 +417,8 @@
                     </filter>
                 </route>
             </post>
-            <delete produces="text/plain" uri="/v1/cache/{cid}/{property}/{value}">
+            <delete id="delete-6676f83b-8929-4249-97b0-b2cae8579257"
+                produces="text/plain" uri="/v1/cache/{cid}/{property}/{value}">
                 <description>Delete hotels data by property value</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -435,7 +440,7 @@
                 </route>
             </delete>
             <!-- testing -->
-            <get uri="/v1/cache/{cid}/{property}/{value}/{limit}">
+            <get id="get-d22154d7-09dd-4864-95a4-fec747578117" uri="/v1/cache/{cid}/{property}/{value}/{limit}">
                 <description>Retrieve hotels data by property value with limit</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -458,7 +463,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/{property}/{value}">
+            <get id="get-55f3ec95-4fa1-43fc-ab54-ff17e9a02000" uri="/v1/cache/{cid}/{property}/{value}">
                 <description>Retrieve hotels data by property value</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
@@ -478,7 +483,7 @@
                     </filter>
                 </route>
             </get>
-            <get uri="/v1/cache/{cid}/sort/{sortBy}/{sortOrder}/{limit}">
+            <get id="get-c92cfefa-a7d5-45c0-8662-a1404a86f16e" uri="/v1/cache/{cid}/sort/{sortBy}/{sortOrder}/{limit}">
                 <description>Retrieve hotels data with limit sorted</description>
                 <param dataType="string" defaultValue="test"
                     description="Hotels collection name" name="cid" type="path"/>
