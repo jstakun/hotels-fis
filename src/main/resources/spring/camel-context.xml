@@ -19,6 +19,8 @@
     </bean>
     <!-- Aggregate Strategy bean -->
     <bean class="net.gmsworld.server.camel.CountAggregateStrategy" id="countAggregationStrategy"/>
+    <!--  Auth Utils -->
+    <bean class="net.gmsworld.server.camel.AuthUtilsBean" id="authUtils" />
     <!-- rest servlet -->
     <bean
         class="org.apache.camel.component.servlet.CamelHttpTransportServlet" id="camelHttpTransportServlet"/>
@@ -89,7 +91,7 @@
             <apiProperty key="api.contact.email" value="jstakun@redhat.com"/>
             <!--apiProperty key="host" value="api-hotels.a3c1.starter-us-west-1.openshiftapps.com"/-->
             <apiProperty key="host" value="openapi-hotels.b9ad.pro-us-east-1.openshiftapps.com"/>
-            <!--apiProperty key="host" value="fuse:8080"/-->
+            <!--apiProperty key="host" value="hotels.192.168.122.79.nip.io"/-->
             <corsHeaders key="Access-Control-Allow-Headers" value="Authorization, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers"/>
         </restConfiguration>
         <rest id="production">
@@ -519,7 +521,6 @@
             <doTry id="_doTry1">
                 <!--to uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/-->
                 <log id="_log1" loggingLevel="INFO" message="Saving to collection ${header.cid} document..."/>
-                <convertBodyTo id="_convertBodyTo2" type="com.mongodb.DBObject"/>
                 <toD id="_toD2" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=save"/>
                 <setBody id="_setBody1">
                     <header>CamelMongoOid</header>
@@ -539,7 +540,6 @@
             <doTry id="_doTry2">
                 <!--to uri="log:DEBUG?showBody=true&amp;showHeaders=true&amp;showProperties=true"/-->
                 <log id="_log16" loggingLevel="INFO" message="Inserting to collection ${header.cid} document..."/>
-                <convertBodyTo id="_convertBodyTo8" type="com.mongodb.DBObject"/>
                 <toD id="_toD5" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=insert"/>
                 <setBody id="_setBody16">
                     <header>CamelMongoOid</header>
@@ -574,10 +574,7 @@
             <setBody id="_setBody3">
                 <simple>{"${header.property}" : "${header.value}"}</simple>
             </setBody>
-            <convertBodyTo id="_convertBodyTo3" type="com.mongodb.DBObject"/>
-            <recipientList id="_recipientList2">
-                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=remove</simple>
-            </recipientList>
+            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=remove"/>
             <log id="_log5" loggingLevel="INFO" message="Deleted from cache ${header.cid} ${header.CamelMongoDbRecordsAffected} objects matching ${header.property} : ${header.value}"/>
             <setBody id="_setBody4">
                 <header>CamelMongoDbRecordsAffected</header>
@@ -602,7 +599,7 @@
             <validate id="_validate1">
                 <simple>${header.limit} range '1..{{batchLimit}}'</simple>
             </validate>
-            <log id="_log6" loggingLevel="INFO" message="Get all from cache ${header.cid} with limit ${header.limit} by user ${header.authorization}"/>
+            <log id="_log6" loggingLevel="INFO" message="Get all from cache ${header.cid} with limit ${header.limit} by user ${bean:authUtils?method=getUsername}"/>
             <setHeader headerName="CamelMongoDbSortBy" id="_setHeader2">
                 <!--  descending by _id -->
                 <constant>{"_id" : -1}</constant>
@@ -613,16 +610,15 @@
             <setHeader headerName="CamelMongoDbBatchSize" id="_setHeader4">
                 <constant>{{batchLimit}}</constant>
             </setHeader>
-            <recipientList id="_recipientList3">
-                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
-            </recipientList>
+            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
+        	<removeHeaders pattern="*"/>
         </route>
         <route id="Get from cache sorted">
             <from id="_from6" uri="direct:getFromCacheSorted"/>
             <validate id="_validate2">
                 <simple>${header.limit} range '1..{{batchLimit}}'</simple>
             </validate>
-            <log id="_log7" loggingLevel="INFO" message="Get all from cache ${header.cid} with limit ${header.limit} sorted by ${header.sortBy}: ${header.sortOrder}  by user ${header.authorization}"/>
+            <log id="_log7" loggingLevel="INFO" message="Get all from cache ${header.cid} with limit ${header.limit} sorted by ${header.sortBy}: ${header.sortOrder}  by user ${bean:authUtils?method=getUsername}"/>
             <setHeader headerName="CamelMongoDbSortBy" id="_setHeader5">
                 <simple resultType="com.mongodb.DBObject">{"${header.sortBy}" : ${header.sortOrder}}</simple>
             </setHeader>
@@ -633,13 +629,13 @@
                 <constant>{{batchLimit}}</constant>
             </setHeader>
             <toD id="_toD4" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
+            <removeHeaders pattern="*"/>
         </route>
         <route id="Get from cache count">
             <from id="_from7" uri="direct:getFromCacheCount"/>
-            <log id="_log8" loggingLevel="INFO" message="Get count from cache ${header.cid} by user ${header.authorization}"/>
-            <recipientList id="_recipientList5">
-                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count</simple>
-            </recipientList>
+            <log id="_log8" loggingLevel="INFO" message="Get count from cache ${header.cid} by user ${bean:authUtils?method=getUsername}"/>
+            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count" />
+            <removeHeaders pattern="*"/>
             <setBody id="_setBody14">
                 <simple>{"count": ${body}}</simple>
             </setBody>
@@ -657,35 +653,30 @@
             <validate id="_validate3">
                 <simple>${header.limit} range '1..{{batchLimit}}'</simple>
             </validate>
-            <log id="_log9" loggingLevel="INFO" message="Get from cache ${header.cid} object matching ${header.property} : ${header.value} with limit ${header.limit} by user ${header.authorization}"/>
+            <log id="_log9" loggingLevel="INFO" message="Get from cache ${header.cid} object matching ${header.property} : ${header.value} with limit ${header.limit} by user ${bean:authUtils?method=getUsername}"/>
             <setBody id="_setBody5">
                 <simple>{"${header.property}" : "${header.value}"}</simple>
             </setBody>
-            <convertBodyTo id="_convertBodyTo4" type="com.mongodb.DBObject"/>
             <setHeader headerName="CamelMongoDbSortBy" id="_setHeader9">
                 <constant>{"_id" : -1}</constant>
             </setHeader>
             <setHeader headerName="CamelMongoDbLimit" id="_setHeader10">
                 <simple>${header.limit}</simple>
             </setHeader>
-            <recipientList id="_recipientList6">
-                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
-            </recipientList>
+            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
+            <removeHeaders pattern="*"/>
         </route>
         <route id="Get one by property from cache">
             <from id="_from10" uri="direct:getByPropertyFromCache"/>
-            <log id="_log10" loggingLevel="INFO" message="Get from cache ${header.cid} object matching ${header.property} : ${header.value} with limit ${header.limit} by user ${header.authorization}"/>
+            <log id="_log10" loggingLevel="INFO" message="Get from cache ${header.cid} object matching ${header.property} : ${header.value} with limit ${header.limit} by user ${bean:authUtils?method=getUsername}"/>
             <setBody id="_setBody6">
                 <simple>{"${header.property}" : "${header.value}"}</simple>
             </setBody>
-            <convertBodyTo id="_convertBodyTo1" type="com.mongodb.DBObject"/>
-            <recipientList id="_recipientList7">
-                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findOneByQuery</simple>
-            </recipientList>
+            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findOneByQuery"/>
         </route>
         <route id="Get one by id from cache">
             <from id="_from11" uri="direct:getByIdFromCache"/>
-            <log id="_log11" loggingLevel="INFO" message="Get from cache ${header.cid} object with id : ${header.id} by user ${header.authorization}"/>
+            <log id="_log11" loggingLevel="INFO" message="Get from cache ${header.cid} object with id  ${header.id} by user ${bean:authUtils?method=getUsername}"/>
             <setBody id="_setBody7">
                 <simple>${header.id}</simple>
             </setBody>
@@ -699,17 +690,15 @@
             <validate id="_validate5">
                 <simple>${header.distance} range '1..{{distanceLimit}}'</simple>
             </validate>
-            <log id="_log12" loggingLevel="INFO" message="Get from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} with limit ${header.limit} by user ${header.authorization}"/>
+            <log id="_log12" loggingLevel="INFO" message="Get from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} with limit ${header.limit} by user ${bean:authUtils?method=getUsername}"/>
             <setBody id="_setBody8">
                 <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
             </setBody>
-            <convertBodyTo id="_convertBodyTo5" type="com.mongodb.DBObject"/>
             <setHeader headerName="CamelMongoDbLimit" id="_setHeader11">
                 <simple>${header.limit}</simple>
             </setHeader>
-            <recipientList id="_recipientList8">
-                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
-            </recipientList>
+            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
+            <removeHeaders pattern="*"/>
         </route>
         <route id="Get most stars nearby from cache">
             <from id="_from13" uri="direct:getStarsNearbyFromCache"/>
@@ -737,20 +726,18 @@
             <validate id="_validate7">
                 <simple>${header.distance} range '1..{{distanceLimit}}'</simple>
             </validate>
-            <log id="_log13" loggingLevel="INFO" message="Get cheapest from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} with limit ${header.limit} by user ${header.authorization}"/>
+            <log id="_log13" loggingLevel="INFO" message="Get cheapest from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} with limit ${header.limit} by user ${bean:authUtils?method=getUsername}"/>
             <setBody id="_setBody10">
                 <simple>{ "properties.minrate" : { $gt : 0 },  "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
             </setBody>
-            <convertBodyTo id="_convertBodyTo6" type="com.mongodb.DBObject"/>
             <setHeader headerName="CamelMongoDbLimit" id="_setHeader14">
                 <simple>${header.limit}</simple>
             </setHeader>
             <setHeader headerName="CamelMongoDbSortBy" id="_setHeader15">
                 <simple resultType="com.mongodb.DBObject">{"properties.minrate" : 1}</simple>
             </setHeader>
-            <recipientList id="_recipientList9">
-                <simple>mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll</simple>
-            </recipientList>
+            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
+            <removeHeaders pattern="*"/>
         </route>
         <route id="Get cheapest nearby from cache and save">
             <from id="_from16" uri="seda:getCheapestNearbyFromCache"/>
@@ -766,12 +753,12 @@
         <route id="Get nearby from cache count">
             <from id="_from17" uri="direct:getNearbyFromCacheCount"/>
             <doTry id="_doTry3">
-                <log id="_log14" loggingLevel="INFO" message="Get count from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} by user ${header.authorization}"/>
+                <log id="_log14" loggingLevel="INFO" message="Get count from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} by user ${bean:authUtils?method=getUsername}"/>
                 <setBody id="_setBody12">
                     <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
                 </setBody>
-                <convertBodyTo id="_convertBodyTo7" type="com.mongodb.DBObject"/>
                 <toD id="_toD3" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count"/>
+                <removeHeaders pattern="*"/>
                 <doCatch id="_doCatch1">
                     <exception>java.lang.Exception</exception>
                     <handled>
