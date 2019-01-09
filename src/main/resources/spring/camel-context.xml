@@ -20,7 +20,7 @@
     <!-- Aggregate Strategy bean -->
     <bean class="net.gmsworld.server.camel.CountAggregateStrategy" id="countAggregationStrategy"/>
     <!--  Auth Utils -->
-    <bean class="net.gmsworld.server.camel.AuthUtilsBean" id="authUtils" />
+    <bean class="net.gmsworld.server.camel.AuthUtilsBean" id="authUtils"/>
     <!-- rest servlet -->
     <bean
         class="org.apache.camel.component.servlet.CamelHttpTransportServlet" id="camelHttpTransportServlet"/>
@@ -384,6 +384,7 @@
                     </filter>
                 </route>
             </post>
+            <!-- this way routes are inserted -->
             <post id="post-f75b6cfa-745d-44cd-bc45-e4aba7246fd4"
                 produces="text/plain"
                 type="net.gmsworld.server.camel.FeatureCollection" uri="/v1/cache/features/{cid}">
@@ -570,12 +571,12 @@
         <!-- delete -->
         <route id="Delete from cache">
             <from id="_from3" uri="direct:deleteFromCache"/>
-            <log id="_log5" loggingLevel="INFO" message="Delete from cache ${header.cid} objects matching ${header.property} : ${header.value}"/>
+            <log id="_log5" loggingLevel="INFO" message="Delete from cache ${header.cid} objects matching ${header.property}: ${header.value}"/>
             <setBody id="_setBody3">
                 <simple>{"${header.property}" : "${header.value}"}</simple>
             </setBody>
-            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=remove"/>
-            <log id="_log5" loggingLevel="INFO" message="Deleted from cache ${header.cid} ${header.CamelMongoDbRecordsAffected} objects matching ${header.property} : ${header.value}"/>
+            <toD id="_toD6" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=remove"/>
+            <log id="_log5" loggingLevel="INFO" message="Deleted from cache ${header.cid} ${header.CamelMongoDbRecordsAffected} objects matching ${header.property}: ${header.value}"/>
             <setBody id="_setBody4">
                 <header>CamelMongoDbRecordsAffected</header>
             </setBody>
@@ -610,8 +611,8 @@
             <setHeader headerName="CamelMongoDbBatchSize" id="_setHeader4">
                 <constant>{{batchLimit}}</constant>
             </setHeader>
-            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
-        	<removeHeaders pattern="*"/>
+            <toD id="_toD7" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
+            <removeHeaders id="_removeHeaders1" pattern="*"/>
         </route>
         <route id="Get from cache sorted">
             <from id="_from6" uri="direct:getFromCacheSorted"/>
@@ -629,13 +630,13 @@
                 <constant>{{batchLimit}}</constant>
             </setHeader>
             <toD id="_toD4" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
-            <removeHeaders pattern="*"/>
+            <removeHeaders id="_removeHeaders2" pattern="*"/>
         </route>
         <route id="Get from cache count">
             <from id="_from7" uri="direct:getFromCacheCount"/>
             <log id="_log8" loggingLevel="INFO" message="Get count from cache ${header.cid} by user ${bean:authUtils?method=getUsername}"/>
-            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count" />
-            <removeHeaders pattern="*"/>
+            <toD id="_toD8" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count"/>
+            <removeHeaders id="_removeHeaders3" pattern="*"/>
             <setBody id="_setBody14">
                 <simple>{"count": ${body}}</simple>
             </setBody>
@@ -653,7 +654,7 @@
             <validate id="_validate3">
                 <simple>${header.limit} range '1..{{batchLimit}}'</simple>
             </validate>
-            <log id="_log9" loggingLevel="INFO" message="Get from cache ${header.cid} object matching ${header.property} : ${header.value} with limit ${header.limit} by user ${bean:authUtils?method=getUsername}"/>
+            <log id="_log9" loggingLevel="INFO" message="Get from cache ${header.cid} object matching ${header.property}: ${header.value} with limit ${header.limit} by user ${bean:authUtils?method=getUsername}"/>
             <setBody id="_setBody5">
                 <simple>{"${header.property}" : "${header.value}"}</simple>
             </setBody>
@@ -663,16 +664,16 @@
             <setHeader headerName="CamelMongoDbLimit" id="_setHeader10">
                 <simple>${header.limit}</simple>
             </setHeader>
-            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
-            <removeHeaders pattern="*"/>
+            <toD id="_toD9" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
+            <removeHeaders id="_removeHeaders4" pattern="*"/>
         </route>
         <route id="Get one by property from cache">
             <from id="_from10" uri="direct:getByPropertyFromCache"/>
-            <log id="_log10" loggingLevel="INFO" message="Get from cache ${header.cid} object matching ${header.property} : ${header.value} with limit ${header.limit} by user ${bean:authUtils?method=getUsername}"/>
+            <log id="_log10" loggingLevel="INFO" message="Get from cache ${header.cid} object matching ${header.property}: ${header.value} with limit ${header.limit} by user ${bean:authUtils?method=getUsername}"/>
             <setBody id="_setBody6">
                 <simple>{"${header.property}" : "${header.value}"}</simple>
             </setBody>
-            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findOneByQuery"/>
+            <toD id="_toD10" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findOneByQuery"/>
         </route>
         <route id="Get one by id from cache">
             <from id="_from11" uri="direct:getByIdFromCache"/>
@@ -697,8 +698,8 @@
             <setHeader headerName="CamelMongoDbLimit" id="_setHeader11">
                 <simple>${header.limit}</simple>
             </setHeader>
-            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
-            <removeHeaders pattern="*"/>
+            <toD id="_toD11" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
+            <removeHeaders id="_removeHeaders5" pattern="*"/>
         </route>
         <route id="Get most stars nearby from cache">
             <from id="_from13" uri="direct:getStarsNearbyFromCache"/>
@@ -736,8 +737,8 @@
             <setHeader headerName="CamelMongoDbSortBy" id="_setHeader15">
                 <simple resultType="com.mongodb.DBObject">{"properties.minrate" : 1}</simple>
             </setHeader>
-            <toD uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
-            <removeHeaders pattern="*"/>
+            <toD id="_toD12" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=findAll"/>
+            <removeHeaders id="_removeHeaders6" pattern="*"/>
         </route>
         <route id="Get cheapest nearby from cache and save">
             <from id="_from16" uri="seda:getCheapestNearbyFromCache"/>
@@ -752,24 +753,12 @@
         </route>
         <route id="Get nearby from cache count">
             <from id="_from17" uri="direct:getNearbyFromCacheCount"/>
-            <doTry id="_doTry3">
-                <log id="_log14" loggingLevel="INFO" message="Get count from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} by user ${bean:authUtils?method=getUsername}"/>
-                <setBody id="_setBody12">
-                    <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
-                </setBody>
-                <toD id="_toD3" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count"/>
-                <removeHeaders pattern="*"/>
-                <doCatch id="_doCatch1">
-                    <exception>java.lang.Exception</exception>
-                    <handled>
-                        <constant>true</constant>
-                    </handled>
-                    <log id="_log15" loggingLevel="ERROR" message="Operation failed with exception: ${exception.message}"/>
-                    <setBody id="_setBody17">
-                        <simple>null</simple>
-                    </setBody>
-                </doCatch>
-            </doTry>
+            <log id="_log14" loggingLevel="INFO" message="Get count from cache ${header.cid} documents near ${header.lat}, ${header.lng} in max distance ${header.distance} by user ${bean:authUtils?method=getUsername}"/>
+            <setBody id="_setBody12">
+                <simple>{ "geometry" : { $near : { $geometry : { type : "Point" , coordinates : [ ${header.lng} , ${header.lat} ] } , $maxDistance : ${header.distance} } } }</simple>
+            </setBody>
+            <toD id="_toD3" uri="mongodb:cloudDb?database=${sysenv.MONGODB_DATABASE}&amp;collection=${header.cid}&amp;operation=count"/>
+            <removeHeaders id="_removeHeaders7" pattern="*"/>
         </route>
         <route id="Get nearby from cache and save">
             <from id="_from18" uri="seda:getNearbyFromCache"/>
